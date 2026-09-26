@@ -1,21 +1,5 @@
 <div align="center">
 
-# ReStep
-
-### Real-Time Freezing of Gait Detection & Assistance
-
-**A wearable-based system designed to detect Freezing of Gait (FoG) episodes and provide immediate personalized cueing assistance.**
-
-<br>
-
-![Flutter](https://img.shields.io/badge/Flutter-Mobile%20Application-063B82?style=for-the-badge&logo=flutter&logoColor=white)
-![Wear OS](https://img.shields.io/badge/Wear%20OS-Smartwatch-4BC3DC?style=for-the-badge&logo=wearos&logoColor=white)
-![Machine Learning](https://img.shields.io/badge/Machine%20Learning-FoG%20Detection-063B82?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-In%20Development-4BC3DC?style=for-the-badge)
-
-</div>
-
----
 
 ##  About ReStep
 
@@ -24,19 +8,6 @@
 The system uses wearable **Shimmer3 IMU sensors** to collect movement data and a machine learning model to detect FoG episodes in real time. When an episode is detected, ReStep provides an immediate personalized cue through a connected **Wear OS smartwatch** to assist the user in resuming movement.
 
 A companion **Android mobile application** allows users to manage their information, review FoG episodes, record relevant daily information, and view their history and trends.
-
----
-
-##  Main Features
-
--  Real-time Freezing of Gait detection
--  Wear OS smartwatch integration
--  Personalized vibration or auditory cueing
--  Android mobile application
--  FoG episode history and tracking
--  Medication and daily routine logging
--  Symptom and episode trends
--  Post-episode information recording
 
 ---
 
