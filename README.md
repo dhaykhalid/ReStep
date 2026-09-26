@@ -8,7 +8,32 @@ The system uses wearable **Shimmer3 IMU sensors** to collect movement data and a
 A companion **Android mobile application** allows users to manage their information, review FoG episodes, record relevant daily information, and view their history and trends.
 
 ---
+## Key Features
 
+- **Real-Time FoG Detection** – Continuously monitors movement using Shimmer3 IMU signals and applies a machine learning model to detect Freezing of Gait episodes as they occur.
+
+- **Configured Cue Delivery** – Automatically delivers the user's configured vibration or auditory cue through the Wear OS smartwatch when FoG is detected.
+
+- **Quick Assistance and Cue Control** – Allows the user to manually trigger the configured cue when assistance is needed and stop an active cue.
+
+- **FoG Episode Tracking** – Records detected FoG episodes, including information such as date and time, estimated duration, and the cue delivered.
+
+- **Post-Episode Context Logging** – Allows the user to optionally record contextual information about what they were doing or what was happening when a FoG episode occurred.
+
+- **Manual FoG Episode Logging** – Allows the user to manually record a FoG episode when needed.
+
+- **FoG History and Statistics** – Allows users to review previous episodes and summary statistics such as episode frequency and average duration.
+
+- **FoG Report Generation** – Generates structured FoG reports containing summary information and episode records that users may choose to export and share with healthcare professionals.
+
+- **Daily Routine Management** – Allows users to schedule medication times and medical appointments and receive reminders at specified times.
+
+- **Emergency Escalation** – Sends an emergency message to a designated emergency contact when predefined escalation conditions are met.
+
+- **Account and Profile Management** – Allows users to manage their account and profile information.
+
+- **Device Connection Monitoring** – Allows users to monitor the connection and status of the Shimmer3 IMU and Wear OS smartwatch.
+---
 ##  System Overview
 
 ReStep consists of four main components:
