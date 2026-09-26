@@ -11,7 +11,7 @@ The system uses wearable **Shimmer3 IMU sensors** to collect movement data and a
 
 A companion **Android mobile application** allows users to manage their information, review FoG episodes, record relevant daily information, and view their history and trends.
 
----
+
 ## Key Features
 
 - **Real-Time FoG Detection** – Continuously monitors movement using Shimmer3 IMU signals and applies a machine learning model to detect Freezing of Gait episodes as they occur.
@@ -35,7 +35,7 @@ A companion **Android mobile application** allows users to manage their informat
 - **Emergency Escalation** – Sends an emergency message to an emergency contact when predefined escalation conditions are met.
 
 - **Account and Profile Management** – Allows users to manage their account and profile information.
----
+
 ##  System Overview
 
 ReStep consists of four main components:
@@ -44,7 +44,7 @@ ReStep consists of four main components:
 
 The wearable sensors continuously capture acceleration and angular velocity data. The collected signals are processed and analyzed by the FoG detection model. When FoG is detected, the system triggers the user's configured cue through the smartwatch while episode information is managed through the mobile application.
 
----
+
 
 ##  Technologies
 
@@ -59,7 +59,7 @@ The wearable sensors continuously capture acceleration and angular velocity data
 | Project Management | Jira |
 | Version Control | Git & GitHub |
 
----
+
 
 ##  ReStep Team
 
@@ -78,13 +78,13 @@ Developed by Information Technology students at
  
 **Dr. Nora Alhammad**
 
----
+
 
 ##  Project Status
 
 ReStep is currently under development as part of the **IT 496 Graduation Project**.
 
----
+
 
 <div align="center">
 
