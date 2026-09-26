@@ -16,7 +16,7 @@ A companion **Android mobile application** allows users to manage their informat
 
 - **Quick Assistance and Cue Control** – Allows the user to manually trigger the configured cue when assistance is needed and stop an active cue.
 
-- **FoG Episode Tracking** – Records detected FoG episodes, including information such as date and time, estimated duration, and the cue delivered.
+- **FoG Episode Tracking** – Records detected FoG episodes, including information such as date and time, estimated duration.
 
 - **Post-Episode Context Logging** – Allows the user to optionally record contextual information about what they were doing or what was happening when a FoG episode occurred.
 
