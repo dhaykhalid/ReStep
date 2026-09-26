@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="C:\Users\Admin\OneDrive\Desktop/logo.png" alt="ReStep Logo" width="300">
+  <img src="assets/restep-logo.png" alt="ReStep Logo" width="300">
 </p>
 ##  About ReStep
 
