@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="ReStep Logo" width="300">
+  <img src="logo.png" alt="ReStep Logo" width="300">
 </p>
 ##  About ReStep
 
