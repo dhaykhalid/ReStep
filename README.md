@@ -28,7 +28,7 @@ A companion **Android mobile application** allows users to manage their informat
 
 - **Daily Routine Management** – Allows users to schedule medication times and medical appointments and receive reminders at specified times.
 
-- **Emergency Escalation** – Sends an emergency message to a designated emergency contact when predefined escalation conditions are met.
+- **Emergency Escalation** – Sends an emergency message to an emergency contact when predefined escalation conditions are met.
 
 - **Account and Profile Management** – Allows users to manage their account and profile information.
 ---
