@@ -31,8 +31,6 @@ A companion **Android mobile application** allows users to manage their informat
 - **Emergency Escalation** – Sends an emergency message to a designated emergency contact when predefined escalation conditions are met.
 
 - **Account and Profile Management** – Allows users to manage their account and profile information.
-
-- **Device Connection Monitoring** – Allows users to monitor the connection and status of the Shimmer3 IMU and Wear OS smartwatch.
 ---
 ##  System Overview
 
