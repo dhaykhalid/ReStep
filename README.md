@@ -3,7 +3,7 @@
 
 **ReStep** is a graduation project developed to support individuals who experience **Freezing of Gait (FoG)**.
 
-The system uses wearable **Shimmer3 IMU sensors** to collect movement data and a machine learning model to detect FoG episodes in real time. When an episode is detected, ReStep provides an immediate personalized cue through a connected **Wear OS smartwatch** to assist the user in resuming movement.
+The system uses wearable **Shimmer3 IMU sensors** to collect movement data and a machine learning model to detect FoG episodes in real time. When an episode is detected, ReStep automatically delivers the user's configured cue through a connected Wear OS smartwatch to assist them in resuming movement.
 
 A companion **Android mobile application** allows users to manage their information, review FoG episodes, record relevant daily information, and view their history and trends.
 
