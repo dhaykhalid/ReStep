@@ -1,8 +1,10 @@
 <p align="center">
   <img src="logo.png" alt="ReStep Logo" width="300">
 </p>
+
 ---
-##  About ReStep
+
+## About ReStep
 
 **ReStep** is a graduation project developed to support individuals who experience **Freezing of Gait (FoG)**.
 
