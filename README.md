@@ -2,10 +2,6 @@
   <img src="logo.png" alt="ReStep Logo" width="300">
 </p>
 
-# ReStep
-
-**Step Forward with Confidence**
-
 ## About ReStep
 
 **ReStep** is a graduation project developed by Information Technology students at King Saud University. The project aims to support individuals who experience **Freezing of Gait (FoG)** by providing real-time detection, assistive cueing, and tools for managing FoG-related information.
