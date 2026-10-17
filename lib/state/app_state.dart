@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/utils/formatters.dart';
-import '../models/cue_settings.dart';
 import '../models/device.dart';
 import '../models/emergency.dart';
 import '../models/fog_episode.dart';
@@ -40,8 +39,8 @@ class AppState extends ChangeNotifier {
     CueService? cueService,
     ReportService? reportService,
     DateTime Function()? clock,
-  })  : _auth = authService ?? MockAuthService(),
-        _repository = repository ?? MockDataRepository(),
+  })  : _auth = authService ?? FirebaseAuthService(),
+        _repository = repository ?? FirebaseDataRepository(),
         _deviceService = deviceService ?? MockDeviceService(),
         _cueService = cueService ?? MockCueService(),
         _reportService = reportService ?? MockReportService(),
@@ -62,8 +61,7 @@ class AppState extends ChangeNotifier {
 
   Patient? _patient;
   List<FogEpisode> _episodes = [];
-  List<Medication> _medications = [];
-  List<Appointment> _appointments = [];
+  List<Reminder> _reminders = [];
   List<EmergencyContact> _contacts = [];
   List<ReStepDevice> _devices = [];
   CueSettings _cueSettings = CueSettings.defaults;
@@ -81,9 +79,8 @@ class AppState extends ChangeNotifier {
   Patient? get patient => _patient;
   bool get isSignedIn => _patient != null;
   List<FogEpisode> get episodes => List.unmodifiable(_episodes);
-  List<Medication> get medications => List.unmodifiable(_medications);
-  List<Appointment> get appointments => List.unmodifiable(_appointments);
   List<EmergencyContact> get contacts => List.unmodifiable(_contacts);
+  List<Reminder> get reminders => List.unmodifiable(_reminders);
   List<ReStepDevice> get pairedDevices => List.unmodifiable(_devices);
   CueSettings get cueSettings => _cueSettings;
   EscalationSettings get escalation => _escalation;
@@ -157,9 +154,8 @@ class AppState extends ChangeNotifier {
     _patient = patient;
     _episodes = [...data.episodes]
       ..sort((a, b) => b.startTime.compareTo(a.startTime));
-    _medications = [...data.medications];
-    _appointments = [...data.appointments];
     _contacts = [...data.contacts];
+    _reminders = [...data.reminders];
     _devices = [...data.devices];
     _cueSettings = data.cueSettings;
     _escalation = data.escalation;
@@ -173,8 +169,7 @@ class AppState extends ChangeNotifier {
     _reconnectTimer?.cancel();
     _patient = null;
     _episodes = [];
-    _medications = [];
-    _appointments = [];
+    _reminders = [];
     _contacts = [];
     _devices = [];
     _cueSettings = CueSettings.defaults;
@@ -316,9 +311,21 @@ class AppState extends ChangeNotifier {
   // -------------------------------------------------------- escalation
 
   Future<void> updateEscalation(int waitSeconds) async {
-    _escalation = EscalationSettings(waitSeconds: waitSeconds);
+    _escalation = EscalationSettings(
+      waitSeconds: waitSeconds,
+    );
+
+    final current = _patient;
+
+    if (current != null) {
+      final updated = current.copyWith(
+        waitingTime: waitSeconds,
+      );
+
+      _patient = await _auth.updateProfile(updated);
+    }
+
     notifyListeners();
-    await _repository.saveEscalationSettings(_escalation);
   }
 
   /// Records an episode that met the escalation conditions.
@@ -403,91 +410,104 @@ class AppState extends ChangeNotifier {
 
   String newContactId() => _newId('contact');
 
-  // ------------------------------------------------------------ routine
+  // ------------------------------------------------------------ reminders
 
-  String newMedicationId() => _newId('med');
-  String newAppointmentId() => _newId('appt');
+  String newReminderId() => _newId('reminder');
 
-  void saveMedication(Medication medication) {
-    final list = [..._medications];
-    final index = list.indexWhere((m) => m.id == medication.id);
+  Future<void> saveReminder(Reminder reminder) async {
+    final list = [..._reminders];
+
+    final index = list.indexWhere(
+          (r) => r.id == reminder.id,
+    );
+
     if (index >= 0) {
-      list[index] = medication;
+      list[index] = reminder;
     } else {
-      list.add(medication);
+      list.add(reminder);
     }
-    list.sort((a, b) => (a.time.hour * 60 + a.time.minute)
-        .compareTo(b.time.hour * 60 + b.time.minute));
-    _medications = list;
-    unawaited(_repository.saveMedication(medication));
+
+    list.sort((a, b) {
+      final aDateTime = DateTime(
+        a.date.year,
+        a.date.month,
+        a.date.day,
+        a.time.hour,
+        a.time.minute,
+      );
+
+      final bDateTime = DateTime(
+        b.date.year,
+        b.date.month,
+        b.date.day,
+        b.time.hour,
+        b.time.minute,
+      );
+
+      return aDateTime.compareTo(bDateTime);
+    });
+
+    _reminders = list;
+
+    await _repository.saveReminder(reminder);
+
     notifyListeners();
   }
 
-  void deleteMedication(String id) {
-    _medications = _medications.where((m) => m.id != id).toList();
-    unawaited(_repository.deleteMedication(id));
+  Future<void> deleteReminder(String id) async {
+    _reminders =
+        _reminders.where((r) => r.id != id).toList();
+
+    await _repository.deleteReminder(id);
+
     notifyListeners();
   }
 
-  void saveAppointment(Appointment appointment) {
-    final list = [..._appointments];
-    final index = list.indexWhere((a) => a.id == appointment.id);
-    if (index >= 0) {
-      list[index] = appointment;
-    } else {
-      list.add(appointment);
-    }
-    list.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-    _appointments = list;
-    unawaited(_repository.saveAppointment(appointment));
-    notifyListeners();
-  }
-
-  void deleteAppointment(String id) {
-    _appointments = _appointments.where((a) => a.id != id).toList();
-    unawaited(_repository.deleteAppointment(id));
-    notifyListeners();
-  }
-
-  Future<void> setReminderPreference(ReminderPreference preference) async {
+  Future<void> setReminderPreference(
+      ReminderPreference preference,
+      ) async {
     _reminderPreference = preference;
     notifyListeners();
-    await _repository.saveReminderPreference(preference);
-  }
 
-  /// Next occurrences of medications and appointments, earliest first.
+    await _repository.saveReminderPreference(
+      preference,
+    );
+  }
   List<UpcomingReminder> get upcomingReminders {
-    final current = _clock();
     final items = <UpcomingReminder>[];
-    for (final m in _medications) {
-      var when = DateTime(
-          current.year, current.month, current.day, m.time.hour, m.time.minute);
-      if (when.isBefore(current)) {
-        when = DateTime(current.year, current.month, current.day + 1,
-            m.time.hour, m.time.minute);
+
+    for (final reminder in _reminders) {
+      final when = DateTime(
+        reminder.date.year,
+        reminder.date.month,
+        reminder.date.day,
+        reminder.time.hour,
+        reminder.time.minute,
+      );
+
+      final key = '${reminder.id}@${when.toIso8601String()}';
+
+      if (_dismissedReminders.contains(key)) {
+        continue;
       }
-      items.add(UpcomingReminder(
-        key: '${m.id}@${when.toIso8601String()}',
-        title: 'Take ${m.name}',
-        detail: m.dose,
-        when: when,
-        isMedication: true,
-      ));
-    }
-    for (final a in _appointments) {
-      final when = a.dateTime;
-      if (when.isAfter(current)) {
-        items.add(UpcomingReminder(
-          key: '${a.id}@${when.toIso8601String()}',
-          title: a.title,
-          detail: a.location,
+
+      items.add(
+        UpcomingReminder(
+          key: key,
+          title: reminder.title,
+          detail: reminder.location.isEmpty
+              ? reminder.context
+              : reminder.location,
           when: when,
           isMedication: false,
-        ));
-      }
+        ),
+      );
     }
-    items.removeWhere((r) => _dismissedReminders.contains(r.key));
-    items.sort((a, b) => a.when.compareTo(b.when));
+
+    items.sort(
+          (a, b) => a.when.compareTo(b.when),
+    );
+
     return items;
   }
 
@@ -495,7 +515,6 @@ class AppState extends ChangeNotifier {
     _dismissedReminders.add(key);
     notifyListeners();
   }
-
   // ------------------------------------------------------------ devices
 
   Future<List<ReStepDevice>> scanNearby() => _deviceService.scanNearby();

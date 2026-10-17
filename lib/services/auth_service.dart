@@ -1,18 +1,18 @@
-import '../data/mock/mock_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/patient.dart';
 
 class AuthException implements Exception {
   const AuthException(this.message);
+
   final String message;
 
   @override
   String toString() => message;
 }
 
-/// Account and profile operations.
-/// TODO(backend): implement with Firebase Authentication + the user profile document.
 abstract class AuthService {
-  /// Returns the patient if a session is still active (stay signed in).
   Future<Patient?> restoreSession();
 
   Future<Patient> signIn(String email, String password);
@@ -32,38 +32,47 @@ abstract class AuthService {
   Future<void> deleteAccount();
 }
 
-class _Account {
-  _Account(this.password, this.patient);
-  final String password;
-  Patient patient;
-}
+class FirebaseAuthService implements AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-/// In-memory implementation used for the frontend prototype.
-class MockAuthService implements AuthService {
-  MockAuthService() {
-    _accounts[MockData.demoPatient.email] =
-        _Account('Restep123', MockData.demoPatient);
-  }
-
-  final Map<String, _Account> _accounts = {};
-  Patient? _current;
-
-  Future<void> _latency([int ms = 800]) =>
-      Future<void>.delayed(Duration(milliseconds: ms));
+  CollectionReference<Map<String, dynamic>> get _patients =>
+      _firestore.collection('patients');
 
   @override
-  Future<Patient?> restoreSession() async => _current;
+  Future<Patient?> restoreSession() async {
+    final user = _auth.currentUser;
+
+    if (user == null) return null;
+
+    final email = user.email;
+    if (email == null) return null;
+
+    return _getPatient(email);
+  }
 
   @override
   Future<Patient> signIn(String email, String password) async {
-    await _latency();
-    final account = _accounts[email.trim().toLowerCase()];
-    if (account == null || account.password != password) {
-      throw const AuthException(
-          'Incorrect email or password. Please check and try again.');
+    final normalizedEmail = email.trim().toLowerCase();
+
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: normalizedEmail,
+        password: password,
+      );
+
+      final patient = await _getPatient(normalizedEmail);
+
+      if (patient == null) {
+        throw const AuthException(
+          'Patient profile was not found.',
+        );
+      }
+
+      return patient;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_authErrorMessage(e));
     }
-    _current = account.patient;
-    return account.patient;
   }
 
   @override
@@ -72,49 +81,142 @@ class MockAuthService implements AuthService {
     required String email,
     required String password,
   }) async {
-    await _latency();
-    final key = email.trim().toLowerCase();
-    if (_accounts.containsKey(key)) {
-      throw const AuthException(
-          'This email is already registered. Try signing in instead.');
+    final normalizedEmail = email.trim().toLowerCase();
+
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: normalizedEmail,
+        password: password,
+      );
+
+      final user = credential.user;
+
+      if (user == null) {
+        throw const AuthException(
+          'Account could not be created.',
+        );
+      }
+
+      final patient = Patient(
+        id: normalizedEmail,
+        fullName: fullName.trim(),
+        email: normalizedEmail,
+      );
+
+      await _patients.doc(normalizedEmail).set({
+        'email': normalizedEmail,
+        'full_name': patient.fullName,
+        'phone': null,
+        'birth_date': null,
+        'waiting_time': null,
+      });
+
+      return patient;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_authErrorMessage(e));
+    } on FirebaseException catch (e) {
+      throw AuthException(
+        e.message ?? 'Could not save patient profile.',
+      );
     }
-    final patient = Patient(
-      id: 'patient-${_accounts.length + 1}',
-      fullName: fullName.trim(),
-      email: key,
-    );
-    _accounts[key] = _Account(password, patient);
-    _current = patient;
-    return patient;
   }
 
   @override
   Future<void> sendPasswordReset(String email) async {
-    // Always succeeds so the response does not reveal which emails exist.
-    await _latency(900);
+    try {
+      await _auth.sendPasswordResetEmail(
+        email: email.trim().toLowerCase(),
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_authErrorMessage(e));
+    }
   }
 
   @override
   Future<Patient> updateProfile(Patient patient) async {
-    await _latency(500);
-    for (final entry in _accounts.entries) {
-      if (entry.value.patient.id == patient.id) {
-        entry.value.patient = patient;
-      }
+    try {
+      await _patients.doc(patient.id).update({
+        'full_name': patient.fullName,
+        'phone': patient.phone,
+        'birth_date': patient.dateOfBirth,
+        'waiting_time': patient.waitingTime,
+      });
+
+      return patient;
+    } on FirebaseException catch (e) {
+      throw AuthException(
+        e.message ?? 'Could not update patient profile.',
+      );
     }
-    _current = patient;
-    return patient;
   }
 
   @override
   Future<void> signOut() async {
-    _current = null;
+    await _auth.signOut();
   }
 
   @override
   Future<void> deleteAccount() async {
-    await _latency(600);
-    _accounts.removeWhere((_, a) => a.patient.id == _current?.id);
-    _current = null;
+    final user = _auth.currentUser;
+
+    if (user == null) return;
+
+    final email = user.email;
+
+    try {
+      if (email != null) {
+        await _patients.doc(email.toLowerCase()).delete();
+      }
+
+      await user.delete();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_authErrorMessage(e));
+    }
+  }
+
+  Future<Patient?> _getPatient(String email) async {
+    final normalizedEmail = email.trim().toLowerCase();
+
+    final snapshot = await _patients.doc(normalizedEmail).get();
+
+    if (!snapshot.exists) return null;
+
+    final data = snapshot.data()!;
+
+    return Patient(
+      id: normalizedEmail,
+      fullName: data['full_name'] as String? ?? '',
+      email: data['email'] as String? ?? normalizedEmail,
+      phone: data['phone'] as String?,
+      dateOfBirth: _parseDate(data['birth_date']),
+      waitingTime: (data['waiting_time'] as num?)?.toInt(),
+    );
+  }
+
+  DateTime? _parseDate(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    return null;
+  }
+
+  String _authErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'email-already-in-use':
+        return 'This email is already registered. Try signing in instead.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'weak-password':
+        return 'The password is too weak.';
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Incorrect email or password. Please check and try again.';
+      case 'network-request-failed':
+        return 'Network error. Please check your internet connection.';
+      default:
+        return e.message ?? 'Authentication failed.';
+    }
   }
 }

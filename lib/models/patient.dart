@@ -6,6 +6,7 @@ class Patient {
     required this.email,
     this.phone,
     this.dateOfBirth,
+    this.waitingTime,
   });
 
   final String id;
@@ -13,10 +14,13 @@ class Patient {
   final String email;
   final String? phone;
   final DateTime? dateOfBirth;
+  final int? waitingTime;
 
   String get firstName {
     final parts = fullName.trim().split(RegExp(r'\s+'));
-    return parts.isEmpty || parts.first.isEmpty ? 'there' : parts.first;
+    return parts.isEmpty || parts.first.isEmpty
+        ? 'there'
+        : parts.first;
   }
 
   String get initials {
@@ -25,10 +29,19 @@ class Patient {
         .split(RegExp(r'\s+'))
         .where((p) => p.isNotEmpty)
         .toList();
+
     if (parts.isEmpty) return '?';
-    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
-        .toUpperCase();
+
+    if (parts.length == 1) {
+      return parts.first
+          .substring(0, 1)
+          .toUpperCase();
+    }
+
+    return (
+        parts.first.substring(0, 1) +
+            parts.last.substring(0, 1)
+    ).toUpperCase();
   }
 
   Patient copyWith({
@@ -36,6 +49,7 @@ class Patient {
     String? email,
     String? phone,
     DateTime? dateOfBirth,
+    int? waitingTime,
   }) {
     return Patient(
       id: id,
@@ -43,6 +57,7 @@ class Patient {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      waitingTime: waitingTime ?? this.waitingTime,
     );
   }
 }

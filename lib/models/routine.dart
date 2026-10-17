@@ -66,3 +66,22 @@ class UpcomingReminder {
   final DateTime when;
   final bool isMedication;
 }
+class Reminder {
+  const Reminder({
+    required this.id,
+    required this.title,
+    required this.context,
+    required this.date,
+    required this.time,
+    required this.location,
+    required this.frequency,
+  });
+
+  final String id;
+  final String title;
+  final String context;
+  final DateTime date;
+  final TimeOfDay time;
+  final String location;
+  final String frequency;
+}

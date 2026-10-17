@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "923713696809",
+    "project_id": "restep-project",
+    "storage_bucket": "restep-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:923713696809:android:df8cba034090f282925838",
+        "android_client_info": {
+          "package_name": "com.restep.restep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZcUmoryMVRvYC38bh7W-zG0icNeZKU2k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -18,8 +18,6 @@ import '../../screens/history/manual_log_screen.dart';
 import '../../screens/profile/profile_form_screen.dart';
 import '../../screens/reports/report_preview_screen.dart';
 import '../../screens/reports/report_screen.dart';
-import '../../screens/routine/appointment_form_screen.dart';
-import '../../screens/routine/medication_form_screen.dart';
 import '../../screens/shell/main_shell.dart';
 import '../../screens/splash/splash_screen.dart';
 import '../../services/report_service.dart';
@@ -43,8 +41,6 @@ class Routes {
   static const String contextCheckIn = '/context-check-in'; // String episodeId
   static const String report = '/report';
   static const String reportPreview = '/report-preview'; // ReportResult
-  static const String medicationForm = '/medication-form'; // String? id
-  static const String appointmentForm = '/appointment-form'; // String? id
   static const String emergencyContacts = '/emergency-contacts';
   static const String contactForm = '/contact-form'; // String? id
   static const String escalationSettings = '/escalation-settings';
@@ -91,12 +87,7 @@ class AppRouter {
       case Routes.reportPreview:
         return _route(settings,
             ReportPreviewScreen(report: settings.arguments as ReportResult));
-      case Routes.medicationForm:
-        return _route(settings,
-            MedicationFormScreen(medicationId: settings.arguments as String?));
-      case Routes.appointmentForm:
-        return _route(settings,
-            AppointmentFormScreen(appointmentId: settings.arguments as String?));
+
       case Routes.emergencyContacts:
         return _route(settings, const EmergencyContactsScreen());
       case Routes.contactForm:

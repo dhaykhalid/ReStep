@@ -1,5 +1,8 @@
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -59,11 +62,19 @@ dependencies {
     implementation("com.shimmerresearch:shimmerdriver:0.11.7_beta") {
         exclude(group = "io.netty")
         exclude(group = "com.google.protobuf")
+        exclude(
+            group = "com.google.api.grpc",
+            module = "proto-google-common-protos"
+        )
     }
     implementation("com.shimmerresearch:shimmerbluetoothmanager:0.11.7_beta") {
         exclude(group = "io.netty")
         exclude(group = "com.google.protobuf")
         exclude(group = "org.apache.commons.math")
+        exclude(
+            group = "com.google.api.grpc",
+            module = "proto-google-common-protos"
+        )
     }
     // مكتبات يحتاجها الـ driver (لأن @aar ما يجيب التوابع تلقائيًا)
     implementation("com.google.guava:guava:20.0")

@@ -18,14 +18,18 @@ class ReStepApp extends StatefulWidget {
 }
 
 class _ReStepAppState extends State<ReStepApp> {
-  late final AppState _state = widget.appState ??
-      AppState(deviceService: ShimmerDeviceService());
+  late final AppState _state =
+      widget.appState ??
+          AppState(
+            deviceService: ShimmerDeviceService(),
+          );
 
   @override
   void dispose() {
     if (widget.appState == null) {
       _state.dispose();
     }
+
     super.dispose();
   }
 
@@ -40,13 +44,16 @@ class _ReStepAppState extends State<ReStepApp> {
         initialRoute: Routes.splash,
         onGenerateRoute: AppRouter.onGenerateRoute,
         builder: (context, child) {
-          // Respect the phone's text size setting, but cap extreme values so
-          // layouts stay usable.
+          // Respect the phone's text size setting, but cap extreme values
+          // so layouts stay usable.
           final mediaQuery = MediaQuery.of(context);
+
           return MediaQuery(
             data: mediaQuery.copyWith(
-              textScaler: mediaQuery.textScaler
-                  .clamp(minScaleFactor: 1.0, maxScaleFactor: 1.35),
+              textScaler: mediaQuery.textScaler.clamp(
+                minScaleFactor: 1.0,
+                maxScaleFactor: 1.35,
+              ),
             ),
             child: child ?? const SizedBox.shrink(),
           );
