@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/cue_settings.dart';
+import '../../models/routine.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 
@@ -43,6 +44,18 @@ class ProfileScreen extends StatelessWidget {
     navigator.pushNamedAndRemoveUntil(Routes.login, (route) => false);
     messenger.showSnackBar(
       const SnackBar(content: Text('Your account has been deleted')),
+    );
+  }
+
+  Future<void> _pickReminderDelivery(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const _ReminderDeliverySheet(),
     );
   }
 
@@ -115,6 +128,17 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         SettingsGroup(
+          title: 'Notifications & Reminders',
+          tiles: [
+            SettingsTile(
+              icon: Icons.notifications_active_outlined,
+              title: 'Reminder delivery',
+              subtitle: 'Send reminders to: ${app.reminderPreference.label}',
+              onTap: () => _pickReminderDelivery(context),
+            ),
+          ],
+        ),
+        SettingsGroup(
           title: 'Safety',
           tiles: [
             SettingsTile(
@@ -166,6 +190,87 @@ class ProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
       ],
+    );
+  }
+}
+
+/// Bottom sheet for choosing where reminders are sent (Phone / Smartwatch /
+/// Both). Saves immediately through [AppState.setReminderPreference].
+class _ReminderDeliverySheet extends StatelessWidget {
+  const _ReminderDeliverySheet();
+
+  static IconData _iconOf(ReminderPreference preference) {
+    switch (preference) {
+      case ReminderPreference.phone:
+        return Icons.smartphone_rounded;
+      case ReminderPreference.watch:
+        return Icons.watch_outlined;
+      case ReminderPreference.both:
+        return Icons.devices_other_rounded;
+    }
+  }
+
+  static String _descriptionOf(ReminderPreference preference) {
+    switch (preference) {
+      case ReminderPreference.phone:
+        return 'Reminders appear on this phone';
+      case ReminderPreference.watch:
+        return 'Reminders go to your paired smartwatch';
+      case ReminderPreference.both:
+        return 'Reminders go to your phone and smartwatch';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                height: 4,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Reminder delivery', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 6),
+            Text(
+              'Choose where your medication and appointment reminders '
+              'are sent.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: AppColors.muted),
+            ),
+            const SizedBox(height: 20),
+            for (final preference in ReminderPreference.values)
+              OptionTile(
+                title: preference.label,
+                subtitle: _descriptionOf(preference),
+                icon: _iconOf(preference),
+                selected: app.reminderPreference == preference,
+                onTap: () {
+                  app.setReminderPreference(preference);
+                  Navigator.of(context).pop();
+                },
+              ),
+            Text(
+              'Smartwatch reminders are not available yet. Your choice is '
+              'saved and will be used once they are.',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
