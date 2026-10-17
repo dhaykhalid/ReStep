@@ -119,17 +119,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
                 AppTextField(
                   label: 'Password',
-                  hint: 'At least 8 characters',
+                  hint: 'Create a strong password',
                   controller: _passwordController,
                   isPassword: true,
                   textInputAction: TextInputAction.next,
                   prefixIcon: Icons.lock_outline_rounded,
                   validator: Validators.newPassword,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Use at least 8 characters with a letter and a number.',
-                  style: theme.textTheme.bodySmall,
+                const SizedBox(height: 8),
+                Text('Your password must include:',
+                    style: theme.textTheme.bodySmall),
+                const SizedBox(height: 4),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _passwordController,
+                  builder: (context, value, _) =>
+                      PasswordRequirementsChecklist(password: value.text),
                 ),
                 const SizedBox(height: 20),
                 AppTextField(

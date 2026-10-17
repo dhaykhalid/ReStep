@@ -11,6 +11,7 @@ export 'info_banner.dart';
 export 'mini_bar_chart.dart';
 export 'month_calendar.dart';
 export 'option_tile.dart';
+export 'password_requirements.dart';
 export 'restep_logo.dart';
 export 'section_header.dart';
 export 'segmented_choice.dart';

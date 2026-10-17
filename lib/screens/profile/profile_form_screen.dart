@@ -170,7 +170,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       final updated = Patient(
         id: current.id,
         fullName: _nameController.text.trim(),
-        email: _emailController.text.trim(),
+        // The email is fixed at registration; never take it from the form.
+        email: current.email,
         phone: phone.isEmpty ? null : phone,
         dateOfBirth: _dateOfBirth,
         waitingTime: _waitingTime,
@@ -290,13 +291,21 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
               AppTextField(
                 label: 'Email',
                 controller: _emailController,
-                keyboardType:
-                TextInputType.emailAddress,
-                textInputAction:
-                TextInputAction.next,
+                readOnly: true,
                 prefixIcon:
                 Icons.mail_outline_rounded,
-                validator: Validators.email,
+                suffixIcon: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.muted,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Email address cannot be changed.',
+                  style: theme.textTheme.bodySmall,
+                ),
               ),
               const SizedBox(height: 20),
               AppTextField(

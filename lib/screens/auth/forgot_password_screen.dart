@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
+import '../../services/auth_service.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 
@@ -17,6 +18,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _loading = false;
   bool _sent = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -27,12 +29,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendLink() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     final app = AppScope.read(context);
     try {
       await app.sendPasswordReset(_emailController.text.trim());
       if (!mounted) return;
       setState(() => _sent = true);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -71,6 +79,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style:
                 theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
           ),
+          const SizedBox(height: 24),
+          const InfoBanner(
+            title: 'Choosing your new password',
+            message: PasswordPolicy.summary,
+          ),
           const SizedBox(height: 32),
           PrimaryButton(
             label: 'Back to Sign In',
@@ -92,6 +105,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ?.copyWith(color: AppColors.muted),
                 ),
                 const SizedBox(height: 28),
+                if (_error != null) ...[
+                  InfoBanner(tone: ChipTone.danger, message: _error!),
+                  const SizedBox(height: 20),
+                ],
                 AppTextField(
                   label: 'Email',
                   hint: 'name@example.com',

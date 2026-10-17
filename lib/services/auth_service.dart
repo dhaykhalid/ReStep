@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../core/utils/validators.dart';
 import '../models/patient.dart';
 
 class AuthException implements Exception {
@@ -83,6 +84,12 @@ class FirebaseAuthService implements AuthService {
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
 
+    // Reject weak passwords before contacting Firebase. Firebase's own
+    // password policy remains the authoritative, server-side check.
+    if (!PasswordPolicy.isValid(password)) {
+      throw const AuthException(PasswordPolicy.summary);
+    }
+
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: normalizedEmail,
@@ -128,6 +135,9 @@ class FirebaseAuthService implements AuthService {
         email: email.trim().toLowerCase(),
       );
     } on FirebaseAuthException catch (e) {
+      // Don't reveal whether an account exists for this email; the screen
+      // already says "If an account exists...".
+      if (e.code == 'user-not-found') return;
       throw AuthException(_authErrorMessage(e));
     }
   }
@@ -135,6 +145,8 @@ class FirebaseAuthService implements AuthService {
   @override
   Future<Patient> updateProfile(Patient patient) async {
     try {
+      // The email is never updated here: it is the Firestore document ID and
+      // the Firebase Auth login, both fixed at registration.
       await _patients.doc(patient.id).update({
         'full_name': patient.fullName,
         'phone': patient.phone,
@@ -142,7 +154,9 @@ class FirebaseAuthService implements AuthService {
         'waiting_time': patient.waitingTime,
       });
 
-      return patient;
+      // The document ID is the registered email, so return that rather than
+      // whatever email the caller passed in.
+      return patient.copyWith(email: patient.id);
     } on FirebaseException catch (e) {
       throw AuthException(
         e.message ?? 'Could not update patient profile.',
@@ -208,7 +222,8 @@ class FirebaseAuthService implements AuthService {
       case 'invalid-email':
         return 'Please enter a valid email address.';
       case 'weak-password':
-        return 'The password is too weak.';
+      case 'password-does-not-meet-requirements':
+        return PasswordPolicy.summary;
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':
@@ -216,6 +231,11 @@ class FirebaseAuthService implements AuthService {
       case 'network-request-failed':
         return 'Network error. Please check your internet connection.';
       default:
+        // Some platform SDK versions report a password policy violation only
+        // in the message, under a generic code.
+        if ((e.message ?? '').contains('PASSWORD_DOES_NOT_MEET_REQUIREMENTS')) {
+          return PasswordPolicy.summary;
+        }
         return e.message ?? 'Authentication failed.';
     }
   }
