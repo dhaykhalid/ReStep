@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/routine.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
@@ -103,17 +104,23 @@ class _ReminderFormScreenState extends State<ReminderFormScreen> {
       frequency: 'Once',
     );
 
-    await app.saveReminder(reminder);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      await app.saveReminder(reminder);
+    } catch (_) {
+      messenger.showAppMessage(
+        'Could not save the reminder. Please try again.',
+        tone: ChipTone.danger,
+      );
+      return;
+    }
 
     if (!mounted) return;
 
-    Navigator.of(context).pop();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Reminder saved'),
-      ),
-    );
+    navigator.pop();
+    messenger.showAppMessage('Reminder added', tone: ChipTone.success);
   }
 
   @override
@@ -130,10 +137,7 @@ class _ReminderFormScreenState extends State<ReminderFormScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: PrimaryButton(
-              label: 'Save',
-              onPressed: _save,
-            ),
+            child: PrimaryButton(label: 'Save', onPressed: _save),
           ),
         ],
       ),
@@ -181,8 +185,7 @@ class _ReminderFormScreenState extends State<ReminderFormScreen> {
               const SizedBox(height: 20),
               const InfoBanner(
                 icon: Icons.info_outline_rounded,
-                message:
-                'You can add reminder details now. Saving to your account will be connected later.',
+                message: 'You can add reminder details now. Saving to your account will be connected later.',
               ),
             ],
           ),

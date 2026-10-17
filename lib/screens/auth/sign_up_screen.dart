@@ -62,15 +62,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        foregroundColor: AppColors.navy,
-        toolbarHeight: 64,
-      ),
+      appBar: AppBar(toolbarHeight: 64),
       body: SafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -82,13 +74,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 const ReStepLogo(size: LogoSize.medium),
                 const SizedBox(height: 24),
-                Text('Create your account',
-                    style: theme.textTheme.headlineMedium),
+                Text(
+                  'Create your account',
+                  style: theme.textTheme.headlineMedium,
+                ),
                 const SizedBox(height: 6),
                 Text(
                   'Your information stays private to your account.',
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(color: AppColors.muted),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
                 const SizedBox(height: 28),
                 if (_error != null) ...[
@@ -127,8 +122,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   validator: Validators.newPassword,
                 ),
                 const SizedBox(height: 8),
-                Text('Your password must include:',
-                    style: theme.textTheme.bodySmall),
+                Text(
+                  'Your password must include:',
+                  style: theme.textTheme.bodySmall,
+                ),
                 const SizedBox(height: 4),
                 ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _passwordController,
@@ -157,8 +154,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account?',
-                        style: theme.textTheme.bodyMedium),
+                    Text(
+                      'Already have an account?',
+                      style: theme.textTheme.bodyMedium,
+                    ),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Sign in'),

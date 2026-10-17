@@ -24,31 +24,38 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            height: 76,
-            width: 76,
+            height: 64,
+            width: 64,
             decoration: const BoxDecoration(
               color: AppColors.skyTint,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 36, color: AppColors.navy),
+            child: Icon(icon, size: 30, color: AppColors.navy),
           ),
-          const SizedBox(height: 16),
-          Text(title,
-              textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text(message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.muted)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+          ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 20),
             PrimaryButton(
-                label: actionLabel!, onPressed: onAction, expand: false),
+              label: actionLabel!,
+              onPressed: onAction,
+              expand: false,
+            ),
           ],
         ],
       ),

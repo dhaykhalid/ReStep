@@ -59,17 +59,17 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
     final app = AppScope.read(context);
-    app.saveContact(EmergencyContact(
-      id: _existing?.id ?? app.newContactId(),
-      name: _nameController.text.trim(),
-      phone: _phoneController.text.trim(),
-      isDesignated: _designated,
-    ));
+    app.saveContact(
+      EmergencyContact(
+        id: _existing?.id ?? app.newContactId(),
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        isDesignated: _designated,
+      ),
+    );
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Emergency contact saved')),
-    );
+    messenger.showAppMessage('Emergency contact saved', tone: ChipTone.success);
   }
 
   Future<void> _delete() async {
@@ -87,9 +87,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
     if (!confirmed) return;
     app.removeContact(_existing!.id);
     navigator.pop();
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Contact removed')),
-    );
+    messenger.showAppMessage('Contact removed', tone: ChipTone.success);
   }
 
   @override
@@ -106,7 +104,9 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: PrimaryButton(label: 'Save', onPressed: _save)),
+          Expanded(
+            child: PrimaryButton(label: 'Save', onPressed: _save),
+          ),
         ],
       ),
       children: [
@@ -145,13 +145,15 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Designated contact',
-                        style: theme.textTheme.titleSmall),
+                    Text(
+                      'Designated contact',
+                      style: theme.textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       _locked
                           ? 'This contact receives the alert. To change it, '
-                              'designate another contact.'
+                                'designate another contact.'
                           : 'Receives the alert if you do not respond.',
                       style: theme.textTheme.bodySmall,
                     ),
@@ -163,8 +165,9 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 scale: 1.15,
                 child: Switch(
                   value: _designated,
-                  onChanged:
-                      _locked ? null : (v) => setState(() => _designated = v),
+                  onChanged: _locked
+                      ? null
+                      : (v) => setState(() => _designated = v),
                   thumbColor: const WidgetStatePropertyAll(Colors.white),
                   trackColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
@@ -172,8 +175,9 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                     }
                     return AppColors.muted;
                   }),
-                  trackOutlineColor:
-                      const WidgetStatePropertyAll(Colors.transparent),
+                  trackOutlineColor: const WidgetStatePropertyAll(
+                    Colors.transparent,
+                  ),
                 ),
               ),
             ],

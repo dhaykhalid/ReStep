@@ -1,5 +1,6 @@
 /// Barrel file: import this one file to use every shared ReStep widget.
 export 'app_buttons.dart';
+export 'app_feedback.dart';
 export 'app_card.dart';
 export 'app_scaffold.dart';
 export 'app_text_field.dart';

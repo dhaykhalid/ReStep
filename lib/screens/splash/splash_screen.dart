@@ -37,9 +37,8 @@ class _SplashScreenState extends State<SplashScreen>
       Future<void>.delayed(const Duration(milliseconds: 1800)),
     ]);
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(
-      app.isSignedIn ? Routes.home : Routes.login,
-    );
+    Navigator.of(context)
+        .pushReplacementNamed(app.isSignedIn ? Routes.home : Routes.login);
   }
 
   @override
@@ -51,6 +50,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Matches Android's white native launch screen, so there is no flash.
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
@@ -69,9 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'Freezing of Gait detection and cueing',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
+                    style: Theme.of(context).textTheme.bodyLarge
                         ?.copyWith(color: AppColors.muted),
                   ),
                   const SizedBox(height: 48),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
+import 'app_buttons.dart' show PressScale;
 
-/// Rounded white card with a subtle shadow. Tappable when [onTap] is set.
+/// Rounded white card with a hairline border and a soft shadow. Tappable
+/// (with gentle press feedback) when [onTap] is set.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -24,31 +26,32 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(20);
-    return Padding(
-      padding: margin,
-      child: Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: radius,
-          border: Border.all(color: borderColor),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 16,
-              offset: Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: radius,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(padding: padding, child: child),
+    final card = Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: radius,
+        border: Border.all(color: borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 18,
+            offset: Offset(0, 4),
           ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(padding: padding, child: child),
         ),
       ),
+    );
+    return Padding(
+      padding: margin,
+      child: onTap == null ? card : PressScale(child: card),
     );
   }
 }

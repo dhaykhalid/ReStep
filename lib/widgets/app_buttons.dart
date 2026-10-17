@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_motion.dart';
 
-/// Large filled button (min height 56). Use [backgroundColor] for
-/// destructive actions.
+/// Large filled button (min height 56). Use [DestructiveButton] (or
+/// [backgroundColor] = [AppColors.danger]) for destructive actions.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -38,37 +39,61 @@ class PrimaryButton extends StatelessWidget {
               backgroundColor: Colors.transparent,
             ),
           )
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 24),
-                const SizedBox(width: 10),
-              ],
-              Flexible(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                ),
-              ),
-            ],
-          );
+        : _ButtonLabel(label: label, icon: icon, iconSize: 24);
 
-    return SizedBox(
-      width: expand ? double.infinity : null,
-      child: FilledButton(
-        onPressed: loading ? () {} : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: foregroundColor,
-          disabledBackgroundColor: AppColors.border,
-          disabledForegroundColor: AppColors.muted,
-          minimumSize: Size(64, minHeight),
+    return PressScale(
+      enabled: onPressed != null && !loading,
+      child: SizedBox(
+        width: expand ? double.infinity : null,
+        child: Semantics(
+          label: loading ? '$label, loading' : null,
+          child: FilledButton(
+            // Keeps the enabled color while loading but ignores taps.
+            onPressed: loading ? () {} : onPressed,
+            style: FilledButton.styleFrom(
+              backgroundColor: backgroundColor,
+              foregroundColor: foregroundColor,
+              disabledBackgroundColor: AppColors.border,
+              disabledForegroundColor: AppColors.muted,
+              minimumSize: Size(64, minHeight),
+            ),
+            child: AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.fast),
+              child: content,
+            ),
+          ),
         ),
-        child: content,
       ),
+    );
+  }
+}
+
+/// Red filled button for irreversible actions (delete, remove...).
+class DestructiveButton extends StatelessWidget {
+  const DestructiveButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.loading = false,
+    this.expand = true,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool loading;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return PrimaryButton(
+      label: label,
+      onPressed: onPressed,
+      icon: icon,
+      loading: loading,
+      expand: expand,
+      backgroundColor: AppColors.danger,
     );
   }
 }
@@ -94,28 +119,81 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: expand ? double.infinity : null,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: color,
-          minimumSize: Size(64, minHeight),
-          side: BorderSide(color: color, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 22),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(label, textAlign: TextAlign.center, maxLines: 2),
+    return PressScale(
+      enabled: onPressed != null,
+      child: SizedBox(
+        width: expand ? double.infinity : null,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: color,
+            minimumSize: Size(64, minHeight),
+            side: BorderSide(
+              color: onPressed == null ? AppColors.border : color,
+              width: 1.5,
             ),
-          ],
+          ),
+          child: _ButtonLabel(label: label, icon: icon, iconSize: 22),
         ),
+      ),
+    );
+  }
+}
+
+class _ButtonLabel extends StatelessWidget {
+  const _ButtonLabel({required this.label, this.icon, required this.iconSize});
+
+  final String label;
+  final IconData? icon;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: iconSize),
+          const SizedBox(width: 10),
+        ],
+        Flexible(child: Text(label, textAlign: TextAlign.center, maxLines: 2)),
+      ],
+    );
+  }
+}
+
+/// Gentle iOS-style "press down" feedback: the child shrinks slightly while
+/// a finger is on it. Disabled when animations are reduced.
+class PressScale extends StatefulWidget {
+  const PressScale({super.key, required this.child, this.enabled = true});
+
+  final Widget child;
+  final bool enabled;
+
+  @override
+  State<PressScale> createState() => _PressScaleState();
+}
+
+class _PressScaleState extends State<PressScale> {
+  bool _pressed = false;
+
+  void _set(bool value) {
+    if (_pressed != value && mounted) setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled || AppMotion.reduced(context)) return widget.child;
+    return Listener(
+      onPointerDown: (_) => _set(true),
+      onPointerUp: (_) => _set(false),
+      onPointerCancel: (_) => _set(false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1,
+        duration: AppMotion.fast,
+        curve: AppMotion.curve,
+        child: widget.child,
       ),
     );
   }

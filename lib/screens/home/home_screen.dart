@@ -28,15 +28,12 @@ class HomeScreen extends StatelessWidget {
     final app = AppScope.read(context);
     final watch = app.watch;
     if (watch == null || !watch.connected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Your smartwatch is not connected.'),
-          action: SnackBarAction(
-            label: 'Pair',
-            textColor: AppColors.sky,
-            onPressed: () => Navigator.of(context).pushNamed(Routes.devices),
-          ),
-        ),
+      showAppMessage(
+        context,
+        'Your smartwatch is not connected.',
+        tone: ChipTone.warning,
+        actionLabel: 'Pair',
+        onAction: () => Navigator.of(context).pushNamed(Routes.devices),
       );
       return;
     }
@@ -60,30 +57,37 @@ class HomeScreen extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
           // Header: logo + avatar
           Row(
             children: [
               const ReStepLogo(size: LogoSize.small),
               const Spacer(),
-              InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () => app.goToTab(3),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: UserAvatar(
-                      initials: patient?.initials ?? '?', size: 48),
+              Semantics(
+                button: true,
+                label: 'Open profile',
+                excludeSemantics: true,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => app.goToTab(3),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: UserAvatar(
+                      initials: patient?.initials ?? '?',
+                      size: 48,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Text('${_greeting(now)},',
-              style: theme.textTheme.bodyLarge
-                  ?.copyWith(color: AppColors.muted)),
-          Text(patient?.firstName ?? '',
-              style: theme.textTheme.headlineMedium),
+          Text(
+            '${_greeting(now)},',
+            style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+          ),
+          Text(patient?.firstName ?? '', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 20),
 
           // Sensor / watch status
@@ -126,8 +130,10 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(EpisodeAnalytics.chartUnit(week),
-                    style: theme.textTheme.titleSmall),
+                Text(
+                  EpisodeAnalytics.chartUnit(week),
+                  style: theme.textTheme.titleSmall,
+                ),
                 const SizedBox(height: 16),
                 MiniBarChart(
                   data: EpisodeAnalytics.chartData(weekEpisodes, week),
@@ -141,17 +147,30 @@ class HomeScreen extends StatelessWidget {
           if (reminders.isEmpty)
             AppCard(
               onTap: () => app.goToTab(2),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.notifications_none_rounded,
-                      color: AppColors.navy, size: 28),
+                  Container(
+                    height: 48,
+                    width: 48,
+                    decoration: const BoxDecoration(
+                      color: AppColors.skyTint,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppColors.navy,
+                      size: 26,
+                    ),
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
                       'No upcoming reminders. Add medications and '
                       'appointments in Routine.',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: AppColors.muted),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.muted,
+                      ),
                     ),
                   ),
                 ],
@@ -180,8 +199,9 @@ class HomeScreen extends StatelessWidget {
               EpisodeTile(
                 episode: episode,
                 showDate: true,
-                onTap: () => Navigator.of(context)
-                    .pushNamed(Routes.episodeDetail, arguments: episode.id),
+                onTap: () =>
+                    Navigator.of(context)
+                        .pushNamed(Routes.episodeDetail, arguments: episode.id),
               ),
         ],
       ),
@@ -239,9 +259,12 @@ class ReminderCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(reminder.detail,
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(color: AppColors.muted)),
+                    Text(
+                      reminder.detail,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.muted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -276,7 +299,8 @@ class _DevicesCard extends StatelessWidget {
         child: EmptyState(
           icon: Icons.bluetooth_searching_rounded,
           title: 'Pair your devices',
-          message: 'Connect your Shimmer3 IMU sensor and smartwatch so '
+          message:
+              'Connect your Shimmer3 IMU sensor and smartwatch so '
               'ReStep can monitor and assist you.',
           actionLabel: 'Pair Devices',
           onAction: () => Navigator.of(context).pushNamed(Routes.devices),
@@ -320,7 +344,8 @@ class _DevicesCard extends StatelessWidget {
             InfoBanner(
               tone: ChipTone.warning,
               title: 'Sensor disconnected',
-              message: 'ReStep is trying to reconnect automatically. '
+              message:
+                  'ReStep is trying to reconnect automatically. '
                   'Make sure the sensor is turned on and close to your phone.',
             ),
         ],
@@ -363,8 +388,7 @@ class _DeviceRow extends StatelessWidget {
               ),
               Text(
                 device.kind.label,
-                style:
-                    const TextStyle(fontSize: 14, color: AppColors.muted),
+                style: const TextStyle(fontSize: 14, color: AppColors.muted),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -374,8 +398,9 @@ class _DeviceRow extends StatelessWidget {
                 children: [
                   StatusChip(
                     label: device.connected ? 'Connected' : 'Disconnected',
-                    tone:
-                        device.connected ? ChipTone.success : ChipTone.warning,
+                    tone: device.connected
+                        ? ChipTone.success
+                        : ChipTone.warning,
                   ),
                   if (device.connected && device.batteryPercent != null)
                     BatteryIndicator(percent: device.batteryPercent!),
@@ -443,7 +468,10 @@ class _QuickAssistanceCard extends StatelessWidget {
             'Need help to start walking? Start your ${cue.type.label.toLowerCase()} '
             'cue yourself.',
             style: const TextStyle(
-                fontSize: 16, height: 1.4, color: Colors.white),
+              fontSize: 16,
+              height: 1.4,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 16),
           SizedBox(

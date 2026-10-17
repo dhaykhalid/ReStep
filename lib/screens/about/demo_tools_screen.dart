@@ -28,19 +28,16 @@ class DemoToolsScreen extends StatelessWidget {
     final app = AppScope.read(context);
     final sensor = app.sensor;
     if (sensor == null || !sensor.connected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No connected sensor to disconnect.')),
-      );
+      showAppMessage(context, 'No connected sensor to disconnect.');
       return;
     }
     app.simulateSensorDisconnect();
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
     app.goToTab(0);
-    messenger.showSnackBar(
-      const SnackBar(
-        content: Text('Sensor disconnected. ReStep is reconnecting…'),
-      ),
+    messenger.showAppMessage(
+      'Sensor disconnected. ReStep is reconnecting…',
+      tone: ChipTone.warning,
     );
   }
 
@@ -48,21 +45,17 @@ class DemoToolsScreen extends StatelessWidget {
     final app = AppScope.read(context);
     final reminders = app.upcomingReminders;
     if (reminders.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('There are no upcoming reminders.')),
-      );
+      showAppMessage(context, 'There are no upcoming reminders.');
       return;
     }
     final reminder = reminders.first;
     await showDialog<void>(
       context: context,
+      barrierColor: AppColors.scrim,
       builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -73,16 +66,19 @@ class DemoToolsScreen extends StatelessWidget {
                   color: AppColors.skyTint,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.notifications_active_outlined,
-                    color: AppColors.navy, size: 32),
+                child: const Icon(
+                  Icons.notifications_active_outlined,
+                  color: AppColors.navy,
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Reminder',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.navy,
+                  color: AppColors.ink,
                 ),
               ),
               const SizedBox(height: 10),
@@ -91,7 +87,10 @@ class DemoToolsScreen extends StatelessWidget {
                 '${reminder.detail}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 17, height: 1.45, color: AppColors.ink),
+                  fontSize: 17,
+                  height: 1.45,
+                  color: AppColors.ink,
+                ),
               ),
               const SizedBox(height: 24),
               PrimaryButton(
@@ -116,7 +115,8 @@ class DemoToolsScreen extends StatelessWidget {
         const InfoBanner(
           tone: ChipTone.neutral,
           icon: Icons.science_outlined,
-          message: 'These buttons stand in for the Shimmer3 IMU, the FoG '
+          message:
+              'These buttons stand in for the Shimmer3 IMU, the FoG '
               'detection model and the smartwatch, so you can see how ReStep '
               'responds. They are not part of the finished product.',
         ),
@@ -124,7 +124,8 @@ class DemoToolsScreen extends StatelessWidget {
         _DemoAction(
           icon: Icons.show_chart_rounded,
           title: 'Live sensor data',
-          description: 'See live Shimmer3 readings and export a recording '
+          description:
+              'See live Shimmer3 readings and export a recording '
               'as CSV (development tool).',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const SensorDataScreen()),
@@ -133,28 +134,32 @@ class DemoToolsScreen extends StatelessWidget {
         _DemoAction(
           icon: Icons.sensors,
           title: 'Simulate a detected FoG episode',
-          description: 'Starts your cue automatically, then offers the '
+          description:
+              'Starts your cue automatically, then offers the '
               'optional context check-in.',
           onTap: () => _simulateEpisode(context),
         ),
         _DemoAction(
           icon: Icons.help_outline_rounded,
           title: 'Simulate an episode that does not resolve',
-          description: 'Shows the "Are you alright?" prompt and the '
+          description:
+              'Shows the "Are you alright?" prompt and the '
               'emergency escalation.',
           onTap: () => _simulateUnresolved(context),
         ),
         _DemoAction(
           icon: Icons.bluetooth_disabled_rounded,
           title: 'Simulate the sensor disconnecting',
-          description: 'Shows the warning on Home. ReStep reconnects '
+          description:
+              'Shows the warning on Home. ReStep reconnects '
               'automatically after a few seconds.',
           onTap: () => _simulateDisconnect(context),
         ),
         _DemoAction(
           icon: Icons.notifications_active_outlined,
           title: 'Simulate a reminder notification',
-          description: 'Shows how a medication or appointment reminder '
+          description:
+              'Shows how a medication or appointment reminder '
               'appears.',
           onTap: () => _simulateReminder(context),
         ),
@@ -211,13 +216,19 @@ class _DemoAction extends StatelessWidget {
                   Text(
                     description,
                     style: const TextStyle(
-                        fontSize: 15, height: 1.35, color: AppColors.muted),
+                      fontSize: 15,
+                      height: 1.35,
+                      color: AppColors.muted,
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.play_circle_outline_rounded,
-                color: AppColors.navy, size: 30),
+            const Icon(
+              Icons.play_circle_outline_rounded,
+              color: AppColors.navy,
+              size: 30,
+            ),
           ],
         ),
       ),

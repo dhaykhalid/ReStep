@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../state/app_scope.dart';
 import '../history/history_screen.dart';
 import '../home/home_screen.dart';
@@ -16,7 +17,6 @@ class MainShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
       body: IndexedStack(
         index: app.selectedTab,
         children: const [
@@ -34,6 +34,7 @@ class MainShell extends StatelessWidget {
           selectedIndex: app.selectedTab,
           onDestinationSelected: app.goToTab,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          animationDuration: AppMotion.of(context, AppMotion.medium),
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),

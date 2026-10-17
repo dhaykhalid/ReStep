@@ -4,6 +4,7 @@ import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/cue_settings.dart';
 import '../../models/routine.dart';
+import '../../services/auth_service.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 
@@ -33,17 +34,29 @@ class ProfileScreen extends StatelessWidget {
     final confirmed = await showConfirmDialog(
       context,
       title: 'Delete Account?',
-      message: 'Are you sure you want to permanently delete your account? '
+      message:
+          'Are you sure you want to permanently delete your account? '
           'This action cannot be undone.',
       confirmLabel: 'Delete Account',
       destructive: true,
       icon: Icons.delete_forever_rounded,
     );
     if (!confirmed) return;
-    await app.deleteAccount();
+    try {
+      await app.deleteAccount();
+    } catch (e) {
+      messenger.showAppMessage(
+        e is AuthException
+            ? e.message
+            : 'Could not delete your account. Please try again.',
+        tone: ChipTone.danger,
+      );
+      return;
+    }
     navigator.pushNamedAndRemoveUntil(Routes.login, (route) => false);
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Your account has been deleted')),
+    messenger.showAppMessage(
+      'Your account has been deleted',
+      tone: ChipTone.success,
     );
   }
 
@@ -51,10 +64,6 @@ class ProfileScreen extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (_) => const _ReminderDeliverySheet(),
     );
   }
@@ -80,13 +89,16 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(patient?.fullName ?? '',
-                        style: theme.textTheme.titleLarge),
+                    Text(
+                      patient?.fullName ?? '',
+                      style: theme.textTheme.titleLarge,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       patient?.email ?? '',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: AppColors.muted),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -115,8 +127,8 @@ class ProfileScreen extends StatelessWidget {
               subtitle: app.pairedDevices.isEmpty
                   ? 'No devices paired yet'
                   : app.isMonitoring
-                      ? 'Sensor connected'
-                      : 'Sensor not connected',
+                  ? 'Sensor connected'
+                  : 'Sensor not connected',
               onTap: () => Navigator.of(context).pushNamed(Routes.devices),
             ),
             SettingsTile(
@@ -227,29 +239,19 @@ class _ReminderDeliverySheet extends StatelessWidget {
     final theme = Theme.of(context);
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(
-              child: Container(
-                height: 4,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
             Text('Reminder delivery', style: theme.textTheme.titleLarge),
             const SizedBox(height: 6),
             Text(
               'Choose where your medication and appointment reminders '
               'are sent.',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.muted),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.muted,
+              ),
             ),
             const SizedBox(height: 20),
             for (final preference in ReminderPreference.values)

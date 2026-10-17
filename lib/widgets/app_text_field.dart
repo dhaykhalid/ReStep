@@ -71,6 +71,8 @@ class _AppTextFieldState extends State<AppTextField> {
           controller: widget.controller,
           validator: widget.validator,
           obscureText: _obscure,
+          autocorrect: !widget.isPassword,
+          enableSuggestions: !widget.isPassword,
           readOnly: widget.readOnly,
           onTap: widget.onTap,
           keyboardType: widget.keyboardType,
@@ -88,8 +90,10 @@ class _AppTextFieldState extends State<AppTextField> {
             hintStyle: const TextStyle(color: AppColors.muted, fontSize: 16),
             filled: true,
             fillColor: AppColors.fieldFill,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
             prefixIcon: widget.prefixIcon == null
                 ? null
                 : Icon(widget.prefixIcon, color: AppColors.navy),
@@ -98,9 +102,11 @@ class _AppTextFieldState extends State<AppTextField> {
                     tooltip: _obscure ? 'Show password' : 'Hide password',
                     iconSize: 26,
                     color: AppColors.muted,
-                    icon: Icon(_obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   )
                 : widget.suffixIcon,

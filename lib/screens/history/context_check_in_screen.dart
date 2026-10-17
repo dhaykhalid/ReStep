@@ -53,8 +53,9 @@ class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
     );
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Context saved to your history')),
+    messenger.showAppMessage(
+      'Context saved to your history',
+      tone: ChipTone.success,
     );
   }
 
@@ -63,7 +64,8 @@ class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
     final app = AppScope.of(context);
     final episode = app.episodeById(widget.episodeId);
     final theme = Theme.of(context);
-    final canSave = _selected.isNotEmpty || _noteController.text.trim().isNotEmpty;
+    final canSave =
+        _selected.isNotEmpty || _noteController.text.trim().isNotEmpty;
 
     return AppScaffold(
       title: 'Add context',
@@ -92,8 +94,11 @@ class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_outline_rounded,
-                    color: AppColors.navy, size: 28),
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.navy,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(

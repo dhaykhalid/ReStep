@@ -28,10 +28,9 @@ class _CueSettingsScreenState extends State<CueSettingsScreen> {
   Future<void> _test() async {
     await AppScope.read(context).testCue(_settings);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Playing your ${_settings.type.label.toLowerCase()} cue'),
-      ),
+    showAppMessage(
+      context,
+      'Playing your ${_settings.type.label.toLowerCase()} cue',
     );
   }
 
@@ -39,10 +38,19 @@ class _CueSettingsScreenState extends State<CueSettingsScreen> {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    await AppScope.read(context).updateCueSettings(_settings);
+    try {
+      await AppScope.read(context).updateCueSettings(_settings);
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+      messenger.showAppMessage(
+        'Could not save your cue settings. Please try again.',
+        tone: ChipTone.danger,
+      );
+      return;
+    }
     if (!mounted) return;
     navigator.pop();
-    messenger.showSnackBar(const SnackBar(content: Text('Cue settings saved')));
+    messenger.showAppMessage('Cue settings saved', tone: ChipTone.success);
   }
 
   @override
@@ -70,7 +78,8 @@ class _CueSettingsScreenState extends State<CueSettingsScreen> {
       ),
       children: [
         const InfoBanner(
-          message: 'When ReStep detects a FoG episode, your cue starts '
+          message:
+              'When ReStep detects a FoG episode, your cue starts '
               'automatically on your smartwatch.',
         ),
         const SectionHeader(title: 'Cue type', topPadding: 24),
@@ -82,7 +91,8 @@ class _CueSettingsScreenState extends State<CueSettingsScreen> {
                 : 'Your watch plays a sound',
             icon: type.icon,
             selected: _settings.type == type,
-            onTap: () => setState(() => _settings = _settings.copyWith(type: type)),
+            onTap: () =>
+                setState(() => _settings = _settings.copyWith(type: type)),
           ),
         const SectionHeader(title: 'Cue pattern', topPadding: 16),
         for (final pattern in CuePattern.values)
@@ -92,16 +102,18 @@ class _CueSettingsScreenState extends State<CueSettingsScreen> {
                 ? 'Repeated short pulses'
                 : 'One steady cue until it ends',
             selected: _settings.pattern == pattern,
-            onTap: () =>
-                setState(() => _settings = _settings.copyWith(pattern: pattern)),
+            onTap: () => setState(
+              () => _settings = _settings.copyWith(pattern: pattern),
+            ),
           ),
         const SectionHeader(title: 'Cue length', topPadding: 16),
         SegmentedChoice<int>(
           values: AppConstants.cueDurationOptions,
           labelOf: (v) => '$v s',
           selected: _settings.durationSeconds,
-          onChanged: (v) =>
-              setState(() => _settings = _settings.copyWith(durationSeconds: v)),
+          onChanged: (v) => setState(
+            () => _settings = _settings.copyWith(durationSeconds: v),
+          ),
         ),
         const SizedBox(height: 28),
         SecondaryButton(

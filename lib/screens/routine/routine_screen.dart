@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 import '../home/home_screen.dart' show ReminderCard;
@@ -12,11 +13,8 @@ class RoutineScreen extends StatelessWidget {
   const RoutineScreen({super.key});
 
   void _addReminder(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ReminderFormScreen(),
-      ),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const ReminderFormScreen()));
   }
 
   @override
@@ -34,23 +32,37 @@ class RoutineScreen extends StatelessWidget {
           icon: Icons.add_rounded,
           onPressed: () => _addReminder(context),
         ),
-        if (reminders.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: _EmptyReminders(),
-          )
-        else ...[
-          const SectionHeader(title: 'Next reminder', topPadding: 24),
-          ReminderCard(reminder: reminders.first, now: now),
-          if (reminders.length > 1) ...[
-            SectionHeader(title: 'Later (${reminders.length - 1})'),
-            for (final reminder in reminders.skip(1))
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: ReminderCard(reminder: reminder, now: now),
-              ),
-          ],
-        ],
+        // Cross-fades between the empty state and the list.
+        AnimatedSwitcher(
+          duration: AppMotion.of(context, AppMotion.medium),
+          switchInCurve: AppMotion.curve,
+          layoutBuilder: (current, previous) => Stack(
+            alignment: Alignment.topCenter,
+            children: [...previous, ?current],
+          ),
+          child: reminders.isEmpty
+              ? const Padding(
+                  key: ValueKey('empty'),
+                  padding: EdgeInsets.only(top: 20),
+                  child: _EmptyReminders(),
+                )
+              : Column(
+                  key: const ValueKey('list'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SectionHeader(title: 'Next reminder', topPadding: 24),
+                    ReminderCard(reminder: reminders.first, now: now),
+                    if (reminders.length > 1) ...[
+                      SectionHeader(title: 'Later (${reminders.length - 1})'),
+                      for (final reminder in reminders.skip(1))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ReminderCard(reminder: reminder, now: now),
+                        ),
+                    ],
+                  ],
+                ),
+        ),
       ],
     );
   }
@@ -90,8 +102,9 @@ class _EmptyReminders extends StatelessWidget {
                 Text(
                   'Tap Add Reminder to plan your next medication or '
                   'appointment.',
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: AppColors.muted),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),

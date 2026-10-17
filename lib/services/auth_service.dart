@@ -65,9 +65,7 @@ class FirebaseAuthService implements AuthService {
       final patient = await _getPatient(normalizedEmail);
 
       if (patient == null) {
-        throw const AuthException(
-          'Patient profile was not found.',
-        );
+        throw const AuthException('Patient profile was not found.');
       }
 
       return patient;
@@ -99,9 +97,7 @@ class FirebaseAuthService implements AuthService {
       final user = credential.user;
 
       if (user == null) {
-        throw const AuthException(
-          'Account could not be created.',
-        );
+        throw const AuthException('Account could not be created.');
       }
 
       final patient = Patient(
@@ -122,18 +118,14 @@ class FirebaseAuthService implements AuthService {
     } on FirebaseAuthException catch (e) {
       throw AuthException(_authErrorMessage(e));
     } on FirebaseException catch (e) {
-      throw AuthException(
-        e.message ?? 'Could not save patient profile.',
-      );
+      throw AuthException(e.message ?? 'Could not save patient profile.');
     }
   }
 
   @override
   Future<void> sendPasswordReset(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(
-        email: email.trim().toLowerCase(),
-      );
+      await _auth.sendPasswordResetEmail(email: email.trim().toLowerCase());
     } on FirebaseAuthException catch (e) {
       // Don't reveal whether an account exists for this email; the screen
       // already says "If an account exists...".
@@ -158,9 +150,7 @@ class FirebaseAuthService implements AuthService {
       // whatever email the caller passed in.
       return patient.copyWith(email: patient.id);
     } on FirebaseException catch (e) {
-      throw AuthException(
-        e.message ?? 'Could not update patient profile.',
-      );
+      throw AuthException(e.message ?? 'Could not update patient profile.');
     }
   }
 
@@ -230,6 +220,11 @@ class FirebaseAuthService implements AuthService {
         return 'Incorrect email or password. Please check and try again.';
       case 'network-request-failed':
         return 'Network error. Please check your internet connection.';
+      case 'requires-recent-login':
+        return 'For your security, please sign out, sign in again and '
+            'then try once more.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a moment and try again.';
       default:
         // Some platform SDK versions report a password policy violation only
         // in the message, under a generic code.

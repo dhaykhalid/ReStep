@@ -87,8 +87,11 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
     }
 
     final dir = await getApplicationDocumentsDirectory();
-    final stamp =
-        DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+    final stamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .split('.')
+        .first;
     final file = File('${dir.path}/shimmer_$stamp.csv');
     await file.writeAsString(buffer.toString());
 
@@ -102,7 +105,7 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
 
   void _showMessage(String text) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    showAppMessage(context, text, tone: ChipTone.warning);
   }
 
   String _fmt(double? v) => v == null ? '--' : v.toStringAsFixed(2);
@@ -127,7 +130,8 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
         const InfoBanner(
           tone: ChipTone.neutral,
           icon: Icons.science_outlined,
-          message: 'Development tool: live Shimmer3 readings and CSV export. '
+          message:
+              'Development tool: live Shimmer3 readings and CSV export. '
               'Not part of the finished product.',
         ),
         const SizedBox(height: 16),
@@ -139,7 +143,8 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
         else if (!connected)
           const InfoBanner(
             tone: ChipTone.warning,
-            message: 'No sensor connected. Connect one from the Devices screen.',
+            message:
+                'No sensor connected. Connect one from the Devices screen.',
           ),
         const SizedBox(height: 16),
         AppCard(
@@ -202,8 +207,10 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
-                style: const TextStyle(fontSize: 16, color: AppColors.muted)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16, color: AppColors.muted),
+            ),
           ),
           Text(
             value,

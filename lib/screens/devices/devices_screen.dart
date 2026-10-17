@@ -48,8 +48,10 @@ class _DevicesScreenState extends State<DevicesScreen> {
       if (!ok) _failed.add(device.id);
     });
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${device.name} connected')),
+      showAppMessage(
+        context,
+        '${device.name} connected',
+        tone: ChipTone.success,
       );
     }
   }
@@ -98,7 +100,8 @@ class _DevicesScreenState extends State<DevicesScreen> {
             ),
         const SizedBox(height: 4),
         const InfoBanner(
-          message: 'Devices you have paired before reconnect '
+          message:
+              'Devices you have paired before reconnect '
               'automatically.',
         ),
         const SectionHeader(title: 'Find devices'),
@@ -112,7 +115,8 @@ class _DevicesScreenState extends State<DevicesScreen> {
         if (_hasScanned && _nearby.isEmpty)
           const InfoBanner(
             tone: ChipTone.warning,
-            message: 'No devices found. Make sure your sensor and smartwatch '
+            message:
+                'No devices found. Make sure your sensor and smartwatch '
                 'are turned on and close to your phone.',
           ),
         for (final device in _nearby)
@@ -177,7 +181,9 @@ class _PairedDeviceCard extends StatelessWidget {
                     Text(
                       device.kind.label,
                       style: const TextStyle(
-                          fontSize: 14, color: AppColors.muted),
+                        fontSize: 14,
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -255,7 +261,9 @@ class _NearbyDeviceCard extends StatelessWidget {
                     Text(
                       device.kind.label,
                       style: const TextStyle(
-                          fontSize: 14, color: AppColors.muted),
+                        fontSize: 14,
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -273,7 +281,8 @@ class _NearbyDeviceCard extends StatelessWidget {
             InfoBanner(
               tone: ChipTone.danger,
               title: "Couldn't connect",
-              message: 'Check that ${device.name} is turned on and close '
+              message:
+                  'Check that ${device.name} is turned on and close '
                   'to your phone, then try again.',
             ),
           ],

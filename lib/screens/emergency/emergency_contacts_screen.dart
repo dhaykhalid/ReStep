@@ -19,7 +19,8 @@ class EmergencyContactsScreen extends StatelessWidget {
       title: 'Emergency contacts',
       children: [
         const InfoBanner(
-          message: 'Your designated contact receives a message if a FoG '
+          message:
+              'Your designated contact receives a message if a FoG '
               'episode does not resolve and you do not respond. They do not '
               'need the ReStep app.',
         ),
@@ -44,8 +45,9 @@ class EmergencyContactsScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: AppCard(
                 padding: const EdgeInsets.all(16),
-                onTap: () => Navigator.of(context)
-                    .pushNamed(Routes.contactForm, arguments: contact.id),
+                onTap: () =>
+                    Navigator.of(context)
+                        .pushNamed(Routes.contactForm, arguments: contact.id),
                 child: Row(
                   children: [
                     UserAvatar(
@@ -71,7 +73,9 @@ class EmergencyContactsScreen extends StatelessWidget {
                           Text(
                             contact.phone,
                             style: const TextStyle(
-                                fontSize: 16, color: AppColors.muted),
+                              fontSize: 16,
+                              color: AppColors.muted,
+                            ),
                           ),
                           if (contact.isDesignated) ...[
                             const SizedBox(height: 8),
@@ -84,8 +88,11 @@ class EmergencyContactsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded,
-                        color: AppColors.muted, size: 28),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.muted,
+                      size: 28,
+                    ),
                   ],
                 ),
               ),
@@ -96,24 +103,42 @@ class EmergencyContactsScreen extends StatelessWidget {
               Navigator.of(context).pushNamed(Routes.escalationSettings),
           child: Row(
             children: [
-              const Icon(Icons.timer_outlined, color: AppColors.navy, size: 28),
+              Container(
+                height: 48,
+                width: 48,
+                decoration: const BoxDecoration(
+                  color: AppColors.skyTint,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.timer_outlined,
+                  color: AppColors.navy,
+                  size: 26,
+                ),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Waiting time before alerting',
-                        style: theme.textTheme.titleSmall),
+                    Text(
+                      'Waiting time before alerting',
+                      style: theme.textTheme.titleSmall,
+                    ),
                     Text(
                       '${app.escalation.waitSeconds} seconds',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: AppColors.muted),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.muted, size: 28),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.muted,
+                size: 28,
+              ),
             ],
           ),
         ),

@@ -27,8 +27,14 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
     setState(() => _sharing = true);
     try {
       await app.shareReport(widget.report);
-      messenger.showSnackBar(
-        SnackBar(content: Text('Report ready: ${widget.report.fileName}')),
+      messenger.showAppMessage(
+        'Report ready: ${widget.report.fileName}',
+        tone: ChipTone.success,
+      );
+    } catch (_) {
+      messenger.showAppMessage(
+        'Could not share the report. Please try again.',
+        tone: ChipTone.danger,
       );
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -52,7 +58,8 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
       children: [
         const InfoBanner(
           tone: ChipTone.neutral,
-          message: 'Prototype note: this previews the report content. '
+          message:
+              'Prototype note: this previews the report content. '
               'Creating the real PDF file and opening the share sheet will '
               'be connected later.',
         ),
@@ -66,16 +73,21 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
                 children: [
                   const ReStepLogo(size: LogoSize.small),
                   const Spacer(),
-                  Text('FoG Report',
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(color: AppColors.navy)),
+                  Text(
+                    'FoG Report',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: AppColors.navy,
+                    ),
+                  ),
                 ],
               ),
               const Divider(height: 28),
               _InfoLine(label: 'Patient', value: report.patientName),
               _InfoLine(label: 'Period', value: report.periodLabel),
               _InfoLine(
-                  label: 'Generated', value: Fmt.date(report.generatedAt)),
+                label: 'Generated',
+                value: Fmt.date(report.generatedAt),
+              ),
               const SizedBox(height: 20),
               Text('Summary measures', style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
@@ -84,13 +96,16 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
                 children: [
                   Expanded(
                     child: StatTile(
-                        value: '${stats.count}', label: 'Total episodes'),
+                      value: '${stats.count}',
+                      label: 'Total episodes',
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: StatTile(
-                        value: Fmt.duration(stats.average),
-                        label: 'Average duration'),
+                      value: Fmt.duration(stats.average),
+                      label: 'Average duration',
+                    ),
                   ),
                 ],
               ),
@@ -100,14 +115,16 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
                 children: [
                   Expanded(
                     child: StatTile(
-                        value: Fmt.duration(stats.longest),
-                        label: 'Longest episode'),
+                      value: Fmt.duration(stats.longest),
+                      label: 'Longest episode',
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: StatTile(
-                        value: Fmt.oneDecimal(stats.perWeek),
-                        label: 'Episodes per week'),
+                      value: Fmt.oneDecimal(stats.perWeek),
+                      label: 'Episodes per week',
+                    ),
                   ),
                 ],
               ),
@@ -144,18 +161,24 @@ class _InfoLine extends StatelessWidget {
         children: [
           SizedBox(
             width: 96,
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.muted,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppColors.muted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.ink,
-                    fontWeight: FontWeight.w700)),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.ink,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -187,13 +210,16 @@ class _LogRow extends StatelessWidget {
           Text(
             '${Fmt.date(episode.startTime)} · ${Fmt.time(episode.startTime)}',
             style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.ink),
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.ink,
+            ),
           ),
           const SizedBox(height: 2),
-          Text(parts.join(' · '),
-              style: const TextStyle(fontSize: 15, color: AppColors.muted)),
+          Text(
+            parts.join(' · '),
+            style: const TextStyle(fontSize: 15, color: AppColors.muted),
+          ),
           if (context0 != null && context0.activities.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -210,9 +236,10 @@ class _LogRow extends StatelessWidget {
                     ? 'Emergency alert sent, then cancelled'
                     : 'Emergency alert sent',
                 style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.warning,
-                    fontWeight: FontWeight.w600),
+                  fontSize: 15,
+                  color: AppColors.warning,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
         ],

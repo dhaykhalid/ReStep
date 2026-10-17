@@ -62,7 +62,9 @@ class _EscalationPromptScreenState extends State<EscalationPromptScreen> {
     setState(() {
       _episodeId = episode.id;
       _alerted = contact;
-      _stage = contact == null ? _PromptStage.noContact : _PromptStage.alertSent;
+      _stage = contact == null
+          ? _PromptStage.noContact
+          : _PromptStage.alertSent;
     });
   }
 
@@ -86,8 +88,9 @@ class _EscalationPromptScreenState extends State<EscalationPromptScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final name = _alerted?.name ?? 'your contact';
     Navigator.of(context).pop();
-    messenger.showSnackBar(
-      SnackBar(content: Text('Cancellation message sent to $name')),
+    messenger.showAppMessage(
+      'Cancellation message sent to $name',
+      tone: ChipTone.success,
     );
   }
 
@@ -136,9 +139,11 @@ class _EscalationPromptScreenState extends State<EscalationPromptScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Are you alright?',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineLarge),
+            Text(
+              'Are you alright?',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineLarge,
+            ),
             const SizedBox(height: 28),
             SizedBox(
               height: 180,
@@ -173,10 +178,11 @@ class _EscalationPromptScreenState extends State<EscalationPromptScreen> {
               contact == null
                   ? 'This prompt is also shown on your smartwatch.'
                   : 'If you do not answer, ${contact.name} will receive a '
-                      'message. This prompt is also shown on your smartwatch.',
+                        'message. This prompt is also shown on your smartwatch.',
               textAlign: TextAlign.center,
-              style:
-                  theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: AppColors.muted,
+              ),
             ),
             const Spacer(),
             PrimaryButton(
@@ -200,25 +206,32 @@ class _EscalationPromptScreenState extends State<EscalationPromptScreen> {
                 color: AppColors.warningTint,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.sms_outlined,
-                  size: 48, color: AppColors.warning),
+              child: const Icon(
+                Icons.sms_outlined,
+                size: 48,
+                color: AppColors.warning,
+              ),
             ),
             const SizedBox(height: 24),
-            Text('Your contact has been alerted',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall),
+            Text(
+              'Your contact has been alerted',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: 10),
             Text(
               'A message with the time of your episode was sent to '
               '${_alerted?.name ?? 'your contact'} at '
               '${Fmt.time(app.now)}. The alert is saved in your history.',
               textAlign: TextAlign.center,
-              style:
-                  theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: AppColors.muted,
+              ),
             ),
             const SizedBox(height: 16),
             const InfoBanner(
-              message: 'If you are safe, press the button below and we will '
+              message:
+                  'If you are safe, press the button below and we will '
                   'send a message to let them know.',
             ),
             const Spacer(),
@@ -245,20 +258,26 @@ class _EscalationPromptScreenState extends State<EscalationPromptScreen> {
                 color: AppColors.warningTint,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.person_add_alt_1_outlined,
-                  size: 48, color: AppColors.warning),
+              child: const Icon(
+                Icons.person_add_alt_1_outlined,
+                size: 48,
+                color: AppColors.warning,
+              ),
             ),
             const SizedBox(height: 24),
-            Text('No emergency contact set',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall),
+            Text(
+              'No emergency contact set',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: 10),
             Text(
               'No message could be sent because you have not added an '
               'emergency contact yet. Add one so help can reach you next time.',
               textAlign: TextAlign.center,
-              style:
-                  theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: AppColors.muted,
+              ),
             ),
             const Spacer(),
             PrimaryButton(

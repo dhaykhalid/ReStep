@@ -27,22 +27,14 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        foregroundColor: AppColors.navy,
         toolbarHeight: 64,
         automaticallyImplyLeading: showBack,
         centerTitle: false,
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.navy,
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(color: AppColors.navy, fontWeight: FontWeight.w800),
         ),
         actions: actions,
       ),
@@ -60,7 +52,7 @@ class AppScaffold extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.background,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),
                 child: bottom,
@@ -91,7 +83,7 @@ class TabPage extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,9 +95,12 @@ class TabPage extends StatelessWidget {
                     Text(title, style: theme.textTheme.headlineMedium),
                     if (subtitle != null) ...[
                       const SizedBox(height: 4),
-                      Text(subtitle!,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: AppColors.muted)),
+                      Text(
+                        subtitle!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.muted,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -113,7 +108,7 @@ class TabPage extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           ...children,
         ],
       ),

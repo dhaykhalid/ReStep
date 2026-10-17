@@ -39,11 +39,19 @@ class _EscalationSettingsScreenState extends State<EscalationSettingsScreen> {
     final app = AppScope.read(context);
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    await app.updateEscalation(_seconds);
+    try {
+      await app.updateEscalation(_seconds);
+    } catch (_) {
+      messenger.showAppMessage(
+        'Could not save the escalation time. Please try again.',
+        tone: ChipTone.danger,
+      );
+      return;
+    }
     navigator.pop();
-    messenger.showSnackBar(
-      const SnackBar(
-          content: Text('Saved. This applies to your next episode.')),
+    messenger.showAppMessage(
+      'Saved. This applies to your next episode.',
+      tone: ChipTone.success,
     );
   }
 
@@ -113,23 +121,23 @@ class _EscalationSettingsScreenState extends State<EscalationSettingsScreen> {
           ),
         ),
         const SectionHeader(title: 'How it works'),
-        const _StepRow(
-          number: 1,
-          text: 'A FoG episode does not resolve.',
-        ),
+        const _StepRow(number: 1, text: 'A FoG episode does not resolve.'),
         const _StepRow(
           number: 2,
-          text: 'You see a prompt on your phone and smartwatch with a large '
+          text:
+              'You see a prompt on your phone and smartwatch with a large '
               '"I\'m Okay" button.',
         ),
         const _StepRow(
           number: 3,
-          text: 'If you do not answer in time, a message with the episode '
+          text:
+              'If you do not answer in time, a message with the episode '
               'time is sent to your designated contact.',
         ),
         const _StepRow(
           number: 4,
-          text: 'If you are safe, you can answer afterwards and a '
+          text:
+              'If you are safe, you can answer afterwards and a '
               'cancellation message is sent.',
         ),
       ],

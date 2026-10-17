@@ -38,24 +38,16 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
 
     final patient = AppScope.read(context).patient;
 
-    _nameController = TextEditingController(
-      text: patient?.fullName ?? '',
-    );
+    _nameController = TextEditingController(text: patient?.fullName ?? '');
 
-    _emailController = TextEditingController(
-      text: patient?.email ?? '',
-    );
+    _emailController = TextEditingController(text: patient?.email ?? '');
 
-    _phoneController = TextEditingController(
-      text: patient?.phone ?? '',
-    );
+    _phoneController = TextEditingController(text: patient?.phone ?? '');
 
     _dateOfBirth = patient?.dateOfBirth;
 
     _dobController = TextEditingController(
-      text: _dateOfBirth == null
-          ? ''
-          : Fmt.date(_dateOfBirth!),
+      text: _dateOfBirth == null ? '' : Fmt.date(_dateOfBirth!),
     );
 
     _waitingTime = patient?.waitingTime;
@@ -75,8 +67,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
 
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-      _dateOfBirth ?? DateTime(now.year - 65, 1, 1),
+      initialDate: _dateOfBirth ?? DateTime(now.year - 65, 1, 1),
       firstDate: DateTime(1900),
       lastDate: now,
       helpText: 'Date of birth',
@@ -102,10 +93,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 padding: EdgeInsets.all(16),
                 child: Text(
                   'Select waiting time',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ),
               ListTile(
@@ -186,19 +174,20 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       if (!mounted) return;
 
       if (widget.isSetup) {
-        navigator.pushNamedAndRemoveUntil(
-          Routes.home,
-              (route) => false,
-        );
+        navigator.pushNamedAndRemoveUntil(Routes.home, (route) => false);
       } else {
         navigator.pop();
 
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Profile saved'),
-          ),
+        messenger.showAppMessage(
+          'Profile updated successfully',
+          tone: ChipTone.success,
         );
       }
+    } catch (_) {
+      messenger.showAppMessage(
+        'Could not save your profile. Please try again.',
+        tone: ChipTone.danger,
+      );
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -211,48 +200,40 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     final theme = Theme.of(context);
 
     return AppScaffold(
-      title: widget.isSetup
-          ? 'Set up your profile'
-          : 'Edit profile',
+      title: widget.isSetup ? 'Set up your profile' : 'Edit profile',
       showBack: !widget.isSetup,
       bottom: widget.isSetup
           ? PrimaryButton(
-        label: 'Save and Continue',
-        loading: _saving,
-        onPressed: _save,
-      )
-          : Row(
-        children: [
-          Expanded(
-            child: SecondaryButton(
-              label: 'Cancel',
-              onPressed: () =>
-                  Navigator.of(context).pop(),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: PrimaryButton(
-              label: 'Save',
+              label: 'Save and Continue',
               loading: _saving,
               onPressed: _save,
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: SecondaryButton(
+                    label: 'Cancel',
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: PrimaryButton(
+                    label: 'Save',
+                    loading: _saving,
+                    onPressed: _save,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       children: [
         if (widget.isSetup) ...[
-          Text(
-            'Welcome to ReStep!',
-            style: theme.textTheme.headlineSmall,
-          ),
+          Text('Welcome to ReStep!', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 6),
           Text(
             'Please check your details. You can change them at any time '
-                'from your profile.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.muted,
-            ),
+            'from your profile.',
+            style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
           ),
           const SizedBox(height: 24),
         ],
@@ -274,17 +255,10 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
               AppTextField(
                 label: 'Full name',
                 controller: _nameController,
-                textCapitalization:
-                TextCapitalization.words,
-                textInputAction:
-                TextInputAction.next,
-                prefixIcon:
-                Icons.person_outline_rounded,
-                validator: (v) =>
-                    Validators.required(
-                      v,
-                      'Full name',
-                    ),
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                prefixIcon: Icons.person_outline_rounded,
+                validator: (v) => Validators.required(v, 'Full name'),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 20),
@@ -292,8 +266,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 label: 'Email',
                 controller: _emailController,
                 readOnly: true,
-                prefixIcon:
-                Icons.mail_outline_rounded,
+                prefixIcon: Icons.mail_outline_rounded,
                 suffixIcon: const Icon(
                   Icons.lock_outline_rounded,
                   color: AppColors.muted,
@@ -313,14 +286,9 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 hint: '+966 5X XXX XXXX',
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                textInputAction:
-                TextInputAction.next,
+                textInputAction: TextInputAction.next,
                 prefixIcon: Icons.phone_outlined,
-                validator: (v) =>
-                    Validators.phone(
-                      v,
-                      isRequired: false,
-                    ),
+                validator: (v) => Validators.phone(v, isRequired: false),
               ),
               const SizedBox(height: 20),
               AppTextField(

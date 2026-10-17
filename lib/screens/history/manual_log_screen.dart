@@ -88,8 +88,13 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
 
   String? _validateDateTime(String? _) {
     final now = AppScope.read(context).now;
-    final start =
-        DateTime(_date.year, _date.month, _date.day, _time.hour, _time.minute);
+    final start = DateTime(
+      _date.year,
+      _date.month,
+      _date.day,
+      _time.hour,
+      _time.minute,
+    );
     if (start.isAfter(now)) {
       return 'The episode time cannot be in the future';
     }
@@ -103,8 +108,13 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
     final seconds = int.parse(_durationController.text.trim());
     final note = _noteController.text.trim();
     app.addManualEpisode(
-      start:
-          DateTime(_date.year, _date.month, _date.day, _time.hour, _time.minute),
+      start: DateTime(
+        _date.year,
+        _date.month,
+        _date.day,
+        _time.hour,
+        _time.minute,
+      ),
       duration: Duration(seconds: seconds),
       context: EpisodeContext(
         activities: AppConstants.contextOptions
@@ -115,8 +125,9 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
     );
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Episode added to your history')),
+    messenger.showAppMessage(
+      'Episode added to your history',
+      tone: ChipTone.success,
     );
   }
 
@@ -194,8 +205,10 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
                 ],
               ),
               const SizedBox(height: 28),
-              Text('What was happening? (optional)',
-                  style: theme.textTheme.titleMedium),
+              Text(
+                'What was happening? (optional)',
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 10,

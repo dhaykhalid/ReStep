@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_motion.dart';
 
 /// A large selectable tile (single choice). Easy to hit for people with
 /// reduced motor control.
@@ -34,7 +35,9 @@ class OptionTile extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
             onTap: onTap,
-            child: Container(
+            child: AnimatedContainer(
+              duration: AppMotion.of(context, AppMotion.fast),
+              curve: AppMotion.curve,
               constraints: const BoxConstraints(minHeight: 72),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
