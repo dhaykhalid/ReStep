@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
@@ -50,14 +49,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _fillDemo() {
-    setState(() {
-      _emailController.text = AppConstants.demoEmail;
-      _passwordController.text = AppConstants.demoPassword;
-      _error = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -78,15 +69,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 6),
                 Text(
                   'Sign in to your ReStep account.',
-                  style: theme.textTheme.bodyLarge
-                      ?.copyWith(color: AppColors.muted),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
                 const SizedBox(height: 28),
                 if (_error != null) ...[
-                  InfoBanner(
-                    tone: ChipTone.danger,
-                    message: _error!,
-                  ),
+                  InfoBanner(tone: ChipTone.danger, message: _error!),
                   const SizedBox(height: 20),
                 ],
                 AppTextField(
@@ -129,40 +118,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Don't have an account?",
-                        style: theme.textTheme.bodyMedium),
+                    Text(
+                      "Don't have an account?",
+                      style: theme.textTheme.bodyMedium,
+                    ),
                     TextButton(
                       onPressed: () =>
                           Navigator.of(context).pushNamed(Routes.signUp),
                       child: const Text('Create account'),
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
-                AppCard(
-                  color: AppColors.skyTint,
-                  borderColor: AppColors.skySoft,
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Prototype demo account',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(color: AppColors.navy)),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${AppConstants.demoEmail}\n'
-                        'Password: ${AppConstants.demoPassword}',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: _fillDemo,
-                        icon: const Icon(Icons.login_rounded),
-                        label: const Text('Fill in demo details'),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),
