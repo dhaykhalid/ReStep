@@ -1,4 +1,5 @@
-import '../core/utils/formatters.dart';
+﻿import '../core/utils/formatters.dart';
+import '../fog_report.dart';
 import '../models/episode_stats.dart';
 import '../models/fog_episode.dart';
 import '../models/patient.dart';
@@ -65,6 +66,7 @@ class MockReportService implements ReportService {
 
   @override
   Future<void> share(ReportResult report) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await shareFogReportPdf(report);
   }
 }
+
