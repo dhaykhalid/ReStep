@@ -4,6 +4,8 @@ import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/period.dart';
+import '../../models/episode_stats.dart';
+import '../../models/fog_episode.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 
@@ -77,6 +79,24 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
+  Future<void> _export() async {
+    final app = AppScope.read(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final range = app.rangeFor(_period, custom: _custom);
+    setState(() => _generating = true);
+    try {
+      final report = await app.generateReport(range);
+      await app.shareReport(report);
+    } catch (_) {
+      messenger.showAppMessage(
+        'Could not share the report. Please try again.',
+        tone: ChipTone.danger,
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
@@ -84,14 +104,20 @@ class _ReportScreenState extends State<ReportScreen> {
     final range = app.rangeFor(_period, custom: _custom);
     final count = app.episodesIn(range).length;
     final hasEpisodes = count > 0;
+    final shownEpisodes = app.episodesIn(range)
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+    final shownStats = EpisodeStats.from(
+      shownEpisodes,
+      days: range?.days ?? EpisodeStats.spanDays(shownEpisodes, DateTime.now()),
+    );
 
     return AppScaffold(
       title: 'FoG report',
       bottom: PrimaryButton(
         label: 'Generate PDF Report',
-        icon: Icons.picture_as_pdf_outlined,
+        icon: Icons.download_rounded,
         loading: _generating,
-        onPressed: hasEpisodes ? _generate : null,
+        onPressed: hasEpisodes ? _export : null,
       ),
       children: [
         Text(
@@ -112,25 +138,10 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         const SizedBox(height: 8),
         if (hasEpisodes)
-          AppCard(
-            color: AppColors.skyTint,
-            borderColor: AppColors.skySoft,
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.description_outlined,
-                    color: AppColors.navy, size: 28),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    count == 1
-                        ? 'This report will include 1 episode.'
-                        : 'This report will include $count episodes.',
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                ),
-              ],
-            ),
+          _InlineReport(
+            episodes: shownEpisodes,
+            stats: shownStats,
+            period: range?.label ?? 'All recorded episodes',
           )
         else
           const InfoBanner(
@@ -146,6 +157,139 @@ class _ReportScreenState extends State<ReportScreen> {
           style: theme.textTheme.bodySmall,
         ),
       ],
+    );
+  }
+}
+
+class _InlineReport extends StatelessWidget {
+  const _InlineReport({
+    required this.episodes,
+    required this.stats,
+    required this.period,
+  });
+
+  final List<FogEpisode> episodes;
+  final EpisodeStats stats;
+  final String period;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FoG Report',
+            style: theme.textTheme.titleLarge?.copyWith(color: AppColors.navy),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            period,
+            style: const TextStyle(fontSize: 15, color: AppColors.muted),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: StatTile(value: '${stats.count}', label: 'Episodes'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: StatTile(
+                  value: Fmt.duration(stats.average),
+                  label: 'Average duration',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: StatTile(
+                  value: Fmt.duration(stats.longest),
+                  label: 'Longest episode',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: StatTile(
+                  value: Fmt.oneDecimal(stats.perWeek),
+                  label: 'Episodes per week',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text('Episode log', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          for (final e in episodes) _ReportLogRow(episode: e),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportLogRow extends StatelessWidget {
+  const _ReportLogRow({required this.episode});
+
+  final FogEpisode episode;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[
+      Fmt.duration(episode.duration),
+      episode.cueDelivered?.label ?? 'No cue',
+      episode.source.label,
+    ];
+    final ctx = episode.context;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${Fmt.date(episode.startTime)} \u00B7 ${Fmt.time(episode.startTime)}',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            parts.join(' \u00B7 '),
+            style: const TextStyle(fontSize: 15, color: AppColors.muted),
+          ),
+          if (ctx != null && ctx.activities.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                'Context: ${ctx.activities.join(', ')}',
+                style: const TextStyle(fontSize: 15, color: AppColors.muted),
+              ),
+            ),
+          if (episode.alertSent)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                episode.alertCancelled
+                    ? 'Emergency alert sent, then cancelled'
+                    : 'Emergency alert sent',
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.warning,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

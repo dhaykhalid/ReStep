@@ -24,7 +24,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
 
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
   late final TextEditingController _dobController;
 
   DateTime? _dateOfBirth;
@@ -42,7 +41,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
 
     _emailController = TextEditingController(text: patient?.email ?? '');
 
-    _phoneController = TextEditingController(text: patient?.phone ?? '');
 
     _dateOfBirth = patient?.dateOfBirth;
 
@@ -57,7 +55,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _dobController.dispose();
     super.dispose();
   }
@@ -153,14 +150,12 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     final navigator = Navigator.of(context);
 
     try {
-      final phone = _phoneController.text.trim();
 
       final updated = Patient(
         id: current.id,
         fullName: _nameController.text.trim(),
         // The email is fixed at registration; never take it from the form.
         email: current.email,
-        phone: phone.isEmpty ? null : phone,
         dateOfBirth: _dateOfBirth,
         waitingTime: _waitingTime,
       );
@@ -282,16 +277,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
               ),
               const SizedBox(height: 20),
               AppTextField(
-                label: 'Phone number (optional)',
-                hint: '+966 5X XXX XXXX',
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.next,
-                prefixIcon: Icons.phone_outlined,
-                validator: (v) => Validators.phone(v, isRequired: false),
-              ),
-              const SizedBox(height: 20),
-              AppTextField(
                 label: 'Date of birth (optional)',
                 hint: 'Select a date',
                 controller: _dobController,
@@ -322,6 +307,14 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'During a freeze, ReStep waits this long for your response before alerting your emergency contact. You can change it anytime.',
+                  style: theme.textTheme.bodySmall,
+                ),
               ),
             ],
           ),
