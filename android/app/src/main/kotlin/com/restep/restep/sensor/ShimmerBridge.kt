@@ -16,12 +16,13 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
-class ShimmerBridge(context: Context, messenger: BinaryMessenger) {
+class ShimmerBridge(private val context: Context, messenger: BinaryMessenger) {
 
     companion object {
         private const val TAG = "ShimmerBridge"
         const val METHOD_CHANNEL = "com.restep/shimmer"
         const val EVENT_CHANNEL = "com.restep/shimmer_stream"
+        private var crashGuardInstalled = false
     }
 
     private var eventSink: EventChannel.EventSink? = null
@@ -37,19 +38,57 @@ class ShimmerBridge(context: Context, messenger: BinaryMessenger) {
         }
     }
 
-    init {
+    // Creates the Shimmer manager the first time it is needed.
+    // It fails if Bluetooth is off, so we retry on every command instead of
+    // only once when the app starts.
+    private fun ensureManager(): ShimmerBluetoothManagerAndroid? {
+        if (btManager != null) return btManager
         try {
             btManager = ShimmerBluetoothManagerAndroid(context, handler)
             Log.d(TAG, "Shimmer manager created")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to create Shimmer manager", e)
+            Log.e(TAG, "Failed to create Shimmer manager (is Bluetooth on?)", e)
         }
+        return btManager
+    }
+
+    // The Shimmer library sometimes throws on its own background thread when
+    // a connection is closed (for example the sensor is switched off while
+    // streaming). That would close the whole app, so we log and ignore errors
+    // that come from Shimmer background threads. Every other error still
+    // goes to the normal handler.
+    private fun installShimmerCrashGuard() {
+        if (crashGuardInstalled) return
+        crashGuardInstalled = true
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+            val fromShimmer = error.stackTrace.any { it.className.startsWith("com.shimmerresearch") }
+            val onMainThread = thread === Looper.getMainLooper().thread
+            if (fromShimmer && !onMainThread) {
+                Log.e(TAG, "Ignored Shimmer library error on thread '${thread.name}'", error)
+            } else {
+                previous?.uncaughtException(thread, error)
+            }
+        }
+    }
+
+    init {
+        installShimmerCrashGuard()
+        ensureManager()
 
         // Commands from Flutter
         MethodChannel(messenger, METHOD_CHANNEL).setMethodCallHandler { call, result ->
             val mac = call.argument<String>("mac")
             Log.d(TAG, "Call ${call.method} mac=$mac")
             try {
+                // Bluetooth must be on before talking to the sensor
+                val adapter = BluetoothAdapter.getDefaultAdapter()
+                if (adapter == null || !adapter.isEnabled) {
+                    result.error("BLUETOOTH_OFF", "Bluetooth is turned off", null)
+                    return@setMethodCallHandler
+                }
+                val btManager = ensureManager()
+
                 when (call.method) {
                     "getPairedDevices" -> {
                         result.success(getPairedShimmers())

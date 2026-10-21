@@ -148,6 +148,38 @@ class AppState extends ChangeNotifier {
     );
     _applyUserData(patient, data);
     notifyListeners();
+    // Reconnect to the sensor used last time, without blocking the login.
+    unawaited(_autoConnectSensor());
+  }
+
+  /// Connects automatically to the sensor the patient used last time.
+  /// If the sensor is off, the device service keeps retrying in the background.
+  Future<void> _autoConnectSensor() async {
+    final saved = await _deviceService.lastConnectedDevice();
+    if (saved == null || _patient == null) return;
+    if (sensor != null && sensor!.connected) return;
+
+    // Show the sensor on Home as "Disconnected" while we try to connect.
+    if (!_devices.any((d) => d.id == saved.id)) {
+      _devices = [
+        ..._devices.where((d) => d.kind != saved.kind),
+        saved,
+      ]..sort((a, b) => a.kind.index.compareTo(b.kind.index));
+      notifyListeners();
+    }
+    await connectDevice(saved);
+  }
+
+  /// Disconnects the sensor and stops automatic reconnection
+  /// (used when the patient signs out or deletes the account).
+  Future<void> _releaseSensor() async {
+    final s = sensor;
+    if (s == null) return;
+    try {
+      await _deviceService.disconnect(s);
+    } catch (_) {
+      // The sensor may already be off; nothing else to do.
+    }
   }
 
   void _applyUserData(Patient patient, UserData data) {
@@ -181,6 +213,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    await _releaseSensor();
     await _auth.signOut();
     _clear();
     notifyListeners();
@@ -188,6 +221,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> deleteAccount() async {
     await _auth.deleteAccount();
+    await _releaseSensor();
     _clear();
     notifyListeners();
   }
@@ -384,9 +418,9 @@ class AppState extends ChangeNotifier {
 
   /// Exactly one contact is designated (when any contact exists).
   List<EmergencyContact> _normaliseDesignated(
-    List<EmergencyContact> list, {
-    String? preferredId,
-  }) {
+      List<EmergencyContact> list, {
+        String? preferredId,
+      }) {
     if (list.isEmpty) return list;
     String? designatedId;
     if (preferredId != null) {

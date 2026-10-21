@@ -22,6 +22,10 @@ abstract class DeviceService {
 
   /// Live connection and battery changes reported by the hardware.
   Stream<DeviceUpdate> get updates;
+
+  /// The sensor the patient connected last time (for automatic reconnection),
+  /// or null if there is none.
+  Future<ReStepDevice?> lastConnectedDevice();
 }
 
 class MockDeviceService implements DeviceService {
@@ -31,6 +35,9 @@ class MockDeviceService implements DeviceService {
 
   @override
   Stream<DeviceUpdate> get updates => const Stream.empty();
+
+  @override
+  Future<ReStepDevice?> lastConnectedDevice() async => null;
 
   @override
   Future<List<ReStepDevice>> scanNearby() async {
