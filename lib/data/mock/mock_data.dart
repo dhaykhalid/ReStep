@@ -17,7 +17,6 @@ class MockData {
     id: 'patient-demo',
     fullName: 'Sara Alharbi',
     email: 'demo@restep.app',
-    phone: '+966 50 123 4567',
     dateOfBirth: DateTime(1962, 4, 12),
   );
 

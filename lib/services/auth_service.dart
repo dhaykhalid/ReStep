@@ -109,7 +109,6 @@ class FirebaseAuthService implements AuthService {
       await _patients.doc(normalizedEmail).set({
         'email': normalizedEmail,
         'full_name': patient.fullName,
-        'phone': null,
         'birth_date': null,
         'waiting_time': null,
       });
@@ -141,7 +140,6 @@ class FirebaseAuthService implements AuthService {
       // the Firebase Auth login, both fixed at registration.
       await _patients.doc(patient.id).update({
         'full_name': patient.fullName,
-        'phone': patient.phone,
         'birth_date': patient.dateOfBirth,
         'waiting_time': patient.waitingTime,
       });
@@ -191,7 +189,6 @@ class FirebaseAuthService implements AuthService {
       id: normalizedEmail,
       fullName: data['full_name'] as String? ?? '',
       email: data['email'] as String? ?? normalizedEmail,
-      phone: data['phone'] as String?,
       dateOfBirth: _parseDate(data['birth_date']),
       waitingTime: (data['waiting_time'] as num?)?.toInt(),
     );

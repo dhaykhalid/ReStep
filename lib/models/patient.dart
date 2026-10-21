@@ -4,7 +4,6 @@ class Patient {
     required this.id,
     required this.fullName,
     required this.email,
-    this.phone,
     this.dateOfBirth,
     this.waitingTime,
   });
@@ -12,7 +11,6 @@ class Patient {
   final String id;
   final String fullName;
   final String email;
-  final String? phone;
   final DateTime? dateOfBirth;
   final int? waitingTime;
 
@@ -47,7 +45,6 @@ class Patient {
   Patient copyWith({
     String? fullName,
     String? email,
-    String? phone,
     DateTime? dateOfBirth,
     int? waitingTime,
   }) {
@@ -55,7 +52,6 @@ class Patient {
       id: id,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
-      phone: phone ?? this.phone,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       waitingTime: waitingTime ?? this.waitingTime,
     );

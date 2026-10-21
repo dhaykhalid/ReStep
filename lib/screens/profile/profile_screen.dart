@@ -113,7 +113,7 @@ class ProfileScreen extends StatelessWidget {
             SettingsTile(
               icon: Icons.person_outline_rounded,
               title: 'Edit profile',
-              subtitle: 'Name, email, phone and date of birth',
+              subtitle: 'Name, email and date of birth',
               onTap: () => Navigator.of(context).pushNamed(Routes.editProfile),
             ),
           ],
