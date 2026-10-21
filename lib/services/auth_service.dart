@@ -13,6 +13,14 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
+/// Thrown by [AuthService.deleteAccount] when Firebase needs the patient to
+/// confirm their password first. Nothing has been deleted when it is thrown.
+class ReauthenticationRequiredException extends AuthException {
+  const ReauthenticationRequiredException()
+      : super('For your security, please enter your password again to '
+            'delete your account.');
+}
+
 abstract class AuthService {
   Future<Patient?> restoreSession();
 
@@ -30,12 +38,42 @@ abstract class AuthService {
 
   Future<void> signOut();
 
-  Future<void> deleteAccount();
+  /// Deletes the patient's Firestore data and Firebase Auth account.
+  ///
+  /// Throws [ReauthenticationRequiredException] (without deleting anything)
+  /// when the session is too old; call again with the patient's [password].
+  Future<void> deleteAccount({String? password});
 }
 
 class FirebaseAuthService implements AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuthService({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    DateTime Function()? clock,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _clock = clock ?? DateTime.now;
+
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+  final DateTime Function() _clock;
+
+  /// Firebase rejects account deletion when the last sign-in is older than
+  /// about five minutes. Stay under that so the password is asked for before
+  /// anything is deleted, rather than discovered halfway through.
+  static const Duration _recentLoginWindow = Duration(minutes: 4);
+
+  /// Sub-collections under patients/{patientEmail} (see FirebaseDataRepository).
+  static const List<String> _patientSubcollections = [
+    'emergency_contacts',
+    'reminders',
+    'fog_episodes',
+    'devices',
+    'settings',
+  ];
+
+  /// Firestore allows at most 500 writes per batch.
+  static const int _maxBatchWrites = 500;
 
   CollectionReference<Map<String, dynamic>> get _patients =>
       _firestore.collection('patients');
@@ -158,21 +196,134 @@ class FirebaseAuthService implements AuthService {
   }
 
   @override
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({String? password}) async {
     final user = _auth.currentUser;
 
     if (user == null) return;
 
-    final email = user.email;
+    final email = user.email?.trim().toLowerCase();
 
-    try {
-      if (email != null) {
-        await _patients.doc(email.toLowerCase()).delete();
+    // 1. Make sure Firebase will accept the deletion before touching any data.
+    if (password != null) {
+      if (email == null) {
+        throw const AuthException('Could not confirm your identity.');
       }
+      try {
+        await user.reauthenticateWithCredential(
+          EmailAuthProvider.credential(email: email, password: password),
+        );
+      } on FirebaseAuthException catch (e) {
+        switch (e.code) {
+          case 'wrong-password':
+          case 'invalid-credential':
+          case 'user-mismatch':
+            throw const AuthException(
+              'Incorrect password. Please check and try again.',
+            );
+          default:
+            throw AuthException(_authErrorMessage(e));
+        }
+      }
+    } else if (!await _hasRecentLogin(user)) {
+      throw const ReauthenticationRequiredException();
+    }
 
+    // 2. Delete the Firestore data, keeping a copy so it can be restored.
+    var backup =
+        <DocumentReference<Map<String, dynamic>>, Map<String, dynamic>>{};
+    if (email != null) {
+      try {
+        backup = await _readPatientData(email);
+        await _deleteDocuments(backup.keys);
+      } on FirebaseException catch (e) {
+        // Each batch applies fully or not at all; restore anything an earlier
+        // batch already removed.
+        await _tryRestore(backup);
+        throw AuthException(
+          e.message ?? 'Could not delete your account. Please try again.',
+        );
+      }
+    }
+
+    // 3. Delete the Firebase Auth account. If that still fails, put the data
+    // back so the patient keeps a working account.
+    try {
       await user.delete();
     } on FirebaseAuthException catch (e) {
+      final restored = await _tryRestore(backup);
+      if (!restored) {
+        throw const AuthException(
+          'Your account could not be deleted and some of your data could not '
+          'be restored. Please try again or contact support.',
+        );
+      }
+      if (e.code == 'requires-recent-login') {
+        throw const ReauthenticationRequiredException();
+      }
       throw AuthException(_authErrorMessage(e));
+    }
+  }
+
+  Future<bool> _hasRecentLogin(User user) async {
+    try {
+      final authTime = (await user.getIdTokenResult()).authTime;
+      if (authTime == null) return false;
+      return _clock().difference(authTime) < _recentLoginWindow;
+    } on FirebaseAuthException {
+      // Can't tell (e.g. offline): ask for the password to be safe.
+      return false;
+    }
+  }
+
+  /// Reads the patient document and every document in its sub-collections.
+  Future<Map<DocumentReference<Map<String, dynamic>>, Map<String, dynamic>>>
+      _readPatientData(String email) async {
+    final patientDoc = _patients.doc(email);
+    final data =
+        <DocumentReference<Map<String, dynamic>>, Map<String, dynamic>>{};
+
+    for (final name in _patientSubcollections) {
+      final snapshot = await patientDoc.collection(name).get();
+      for (final doc in snapshot.docs) {
+        data[doc.reference] = doc.data();
+      }
+    }
+
+    final snapshot = await patientDoc.get();
+    if (snapshot.exists) data[patientDoc] = snapshot.data()!;
+
+    return data;
+  }
+
+  Future<void> _deleteDocuments(
+    Iterable<DocumentReference<Map<String, dynamic>>> refs,
+  ) async {
+    final list = refs.toList();
+    for (var i = 0; i < list.length; i += _maxBatchWrites) {
+      final batch = _firestore.batch();
+      for (final ref in list.skip(i).take(_maxBatchWrites)) {
+        batch.delete(ref);
+      }
+      await batch.commit();
+    }
+  }
+
+  /// Writes [backup] back to Firestore. Returns false if that failed.
+  Future<bool> _tryRestore(
+    Map<DocumentReference<Map<String, dynamic>>, Map<String, dynamic>> backup,
+  ) async {
+    try {
+      final entries = backup.entries.toList();
+      for (var i = 0; i < entries.length; i += _maxBatchWrites) {
+        final batch = _firestore.batch();
+        for (final entry in entries.skip(i).take(_maxBatchWrites)) {
+          batch.set(entry.key, entry.value);
+        }
+        await batch.commit();
+      }
+      return true;
+    } on FirebaseException {
+      return false;
     }
   }
 
@@ -218,8 +369,7 @@ class FirebaseAuthService implements AuthService {
       case 'network-request-failed':
         return 'Network error. Please check your internet connection.';
       case 'requires-recent-login':
-        return 'For your security, please sign out, sign in again and '
-            'then try once more.';
+        return const ReauthenticationRequiredException().message;
       case 'too-many-requests':
         return 'Too many attempts. Please wait a moment and try again.';
       default:

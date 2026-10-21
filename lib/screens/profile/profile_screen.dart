@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/validators.dart';
 import '../../models/cue_settings.dart';
 import '../../models/routine.dart';
 import '../../services/auth_service.dart';
@@ -44,6 +45,18 @@ class ProfileScreen extends StatelessWidget {
     if (!confirmed) return;
     try {
       await app.deleteAccount();
+    } on ReauthenticationRequiredException {
+      // Old session: nothing was deleted. Ask for the password here instead
+      // of making the patient sign out and back in.
+      if (!context.mounted) return;
+      final deleted = await showDialog<bool>(
+        context: context,
+        barrierColor: AppColors.scrim,
+        builder: (_) => _ConfirmPasswordDialog(
+          onSubmit: (password) => app.deleteAccount(password: password),
+        ),
+      );
+      if (deleted != true) return;
     } catch (e) {
       messenger.showAppMessage(
         e is AuthException
@@ -202,6 +215,123 @@ class ProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
       ],
+    );
+  }
+}
+
+/// Asks for the patient's password when Firebase needs a recent sign-in to
+/// delete the account. Runs [onSubmit] itself so a wrong password can be
+/// retried without closing; pops true once the account is deleted.
+class _ConfirmPasswordDialog extends StatefulWidget {
+  const _ConfirmPasswordDialog({required this.onSubmit});
+
+  final Future<void> Function(String password) onSubmit;
+
+  @override
+  State<_ConfirmPasswordDialog> createState() => _ConfirmPasswordDialogState();
+}
+
+class _ConfirmPasswordDialogState extends State<_ConfirmPasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _passwordController = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_loading || !_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await widget.onSubmit(_passwordController.text);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e is AuthException
+            ? e.message
+            : 'Could not delete your account. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Confirm your password',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'For your security, enter your password to delete your '
+                  'account.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    height: 1.45,
+                    color: AppColors.muted,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (_error != null) ...[
+                  InfoBanner(tone: ChipTone.danger, message: _error!),
+                  const SizedBox(height: 16),
+                ],
+                AppTextField(
+                  label: 'Password',
+                  controller: _passwordController,
+                  isPassword: true,
+                  prefixIcon: Icons.lock_outline_rounded,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.password],
+                  validator: Validators.passwordPresent,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: 24),
+                DestructiveButton(
+                  label: 'Delete Account',
+                  loading: _loading,
+                  onPressed: _loading ? null : _submit,
+                ),
+                const SizedBox(height: 10),
+                SecondaryButton(
+                  label: 'Cancel',
+                  onPressed:
+                      _loading ? null : () => Navigator.of(context).pop(false),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

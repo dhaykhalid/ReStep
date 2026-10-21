@@ -219,8 +219,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteAccount() async {
-    await _auth.deleteAccount();
+  /// Pass [password] after a [ReauthenticationRequiredException].
+  Future<void> deleteAccount({String? password}) async {
+    await _auth.deleteAccount(password: password);
     await _releaseSensor();
     _clear();
     notifyListeners();
