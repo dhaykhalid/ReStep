@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
@@ -8,12 +7,9 @@ import '../../models/patient.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 
-/// Edit profile, and also the "profile setup" step shown right after
-/// registration ([isSetup] = true).
+/// Edit profile: full name, email (read-only) and date of birth.
 class ProfileFormScreen extends StatefulWidget {
-  const ProfileFormScreen({super.key, this.isSetup = false});
-
-  final bool isSetup;
+  const ProfileFormScreen({super.key});
 
   @override
   State<ProfileFormScreen> createState() => _ProfileFormScreenState();
@@ -107,16 +103,12 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
 
       if (!mounted) return;
 
-      if (widget.isSetup) {
-        navigator.pushNamedAndRemoveUntil(Routes.home, (route) => false);
-      } else {
-        navigator.pop();
+      navigator.pop();
 
-        messenger.showAppMessage(
-          'Profile updated successfully',
-          tone: ChipTone.success,
-        );
-      }
+      messenger.showAppMessage(
+        'Profile updated successfully',
+        tone: ChipTone.success,
+      );
     } catch (_) {
       messenger.showAppMessage(
         'Could not save your profile. Please try again.',
@@ -134,43 +126,26 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     final theme = Theme.of(context);
 
     return AppScaffold(
-      title: widget.isSetup ? 'Set up your profile' : 'Edit profile',
-      showBack: !widget.isSetup,
-      bottom: widget.isSetup
-          ? PrimaryButton(
-              label: 'Save and Continue',
+      title: 'Edit profile',
+      bottom: Row(
+        children: [
+          Expanded(
+            child: SecondaryButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: PrimaryButton(
+              label: 'Save',
               loading: _saving,
               onPressed: _save,
-            )
-          : Row(
-              children: [
-                Expanded(
-                  child: SecondaryButton(
-                    label: 'Cancel',
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: PrimaryButton(
-                    label: 'Save',
-                    loading: _saving,
-                    onPressed: _save,
-                  ),
-                ),
-              ],
             ),
-      children: [
-        if (widget.isSetup) ...[
-          Text('Welcome to ReStep!', style: theme.textTheme.headlineSmall),
-          const SizedBox(height: 6),
-          Text(
-            'Please check your details. You can change them at any time '
-            'from your profile.',
-            style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
           ),
-          const SizedBox(height: 24),
         ],
+      ),
+      children: [
         Center(
           child: UserAvatar(
             initials: Patient(

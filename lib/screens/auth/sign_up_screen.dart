@@ -47,9 +47,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text,
       );
       if (!mounted) return;
-      // After registration the patient continues to profile setup.
+      // Registration already saved the patient record (name and email), so
+      // go straight to Home. Date of birth can be added from Edit profile.
       Navigator.of(context)
-          .pushNamedAndRemoveUntil(Routes.profileSetup, (route) => false);
+          .pushNamedAndRemoveUntil(Routes.home, (route) => false);
     } on AuthException catch (e) {
       if (!mounted) return;
       setState(() => _error = e.message);

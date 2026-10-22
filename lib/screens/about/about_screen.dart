@@ -19,7 +19,7 @@ class AboutScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Center(
           child: Text(
-            'Version ${AppConstants.version} (prototype)',
+            'Version ${AppConstants.version}',
             style: theme.textTheme.bodySmall,
           ),
         ),
@@ -28,13 +28,16 @@ class AboutScreen extends StatelessWidget {
           icon: Icons.favorite_border_rounded,
           title: 'What ReStep does',
           lines: const [
-            'Monitors your movement with a Shimmer3 IMU sensor.',
-            'Detects Freezing of Gait (FoG) episodes as they occur.',
-            'Delivers your vibration or auditory cue on your smartwatch.',
-            'Records your episodes so you can review them and share a '
-                'FoG report if you choose.',
-            'Helps you manage reminders for your daily activities, and can '
-                'alert your emergency contact.',
+            'Monitors your movement using a Shimmer3 IMU sensor.',
+            'Detects Freezing of Gait (FoG) episodes in real time.',
+            'Provides vibration or auditory cues through your smartwatch to '
+                'help you resume movement.',
+            'Records FoG episodes and allows you to review your history and '
+                'generate reports.',
+            'Helps you organize daily activities through personalized '
+                'reminders.',
+            'Sends an emergency alert with your location to your emergency '
+                'contact when predefined conditions are met.',
           ],
         ),
         const SizedBox(height: 16),
@@ -42,11 +45,14 @@ class AboutScreen extends StatelessWidget {
           icon: Icons.do_not_disturb_on_outlined,
           title: 'What ReStep does not do',
           lines: const [
-            'It detects episodes as they happen. It does not predict them.',
-            'It shows vibration and auditory cues only.',
-            'It shows recorded episodes without clinical interpretation. It '
-                'gives no diagnosis or treatment recommendations.',
-            'It does not check medication doses or interactions.',
+            'Does not predict Freezing of Gait (FoG) episodes before they '
+                'occur.',
+            'Does not provide cueing methods other than vibration and '
+                'auditory cues.',
+            'Does not provide medical diagnoses, clinical interpretations, or '
+                'treatment recommendations.',
+            'Does not verify medication dosages or check for drug '
+                'interactions.',
           ],
         ),
         const SizedBox(height: 16),
@@ -54,18 +60,18 @@ class AboutScreen extends StatelessWidget {
           icon: Icons.lock_outline_rounded,
           title: 'Your data',
           lines: const [
-            'Your FoG information is stored securely and is only available '
-                'to your account.',
-            'Continuous raw sensor data is not permanently kept by default.',
-            'Reports are shared with a healthcare professional only when you '
-                'choose to export and share them.',
+            'Your personal information and all data stored in ReStep are '
+                'protected and accessible only through your account.',
+            'Continuous raw sensor data is not permanently stored by default.',
+            'Your reports are shared with healthcare professionals only when '
+                'you choose to export and share them.',
           ],
         ),
         const SizedBox(height: 16),
         _InfoCard(
           icon: Icons.language_rounded,
           title: 'Language',
-          lines: const ['The app is currently available in English.'],
+          lines: const ['ReStep is currently available in English.'],
         ),
         const SizedBox(height: 24),
         Center(
@@ -115,9 +121,7 @@ class _InfoCard extends StatelessWidget {
                     padding: EdgeInsets.only(top: 9, right: 10),
                     child: Icon(Icons.circle, size: 7, color: AppColors.sky),
                   ),
-                  Expanded(
-                    child: Text(line, style: theme.textTheme.bodyLarge),
-                  ),
+                  Expanded(child: Text(line, style: theme.textTheme.bodyLarge)),
                 ],
               ),
             ),

@@ -30,7 +30,6 @@ class Routes {
   static const String login = '/login';
   static const String signUp = '/sign-up';
   static const String forgotPassword = '/forgot-password';
-  static const String profileSetup = '/profile-setup';
   static const String home = '/home';
   static const String editProfile = '/edit-profile';
   static const String devices = '/devices';
@@ -62,8 +61,6 @@ class AppRouter {
         return _route(settings, const SignUpScreen());
       case Routes.forgotPassword:
         return _route(settings, const ForgotPasswordScreen());
-      case Routes.profileSetup:
-        return _route(settings, const ProfileFormScreen(isSetup: true));
       case Routes.home:
         return _route(settings, const MainShell());
       case Routes.editProfile:
