@@ -183,18 +183,23 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         SettingsGroup(
+          title: 'Sensor Data',
+          tiles: [
+            SettingsTile(
+              icon: Icons.show_chart_rounded,
+              title: 'Live sensor data',
+              subtitle: 'View real-time Shimmer3 sensor readings',
+              onTap: () => Navigator.of(context).pushNamed(Routes.sensorData),
+            ),
+          ],
+        ),
+        SettingsGroup(
           title: 'About',
           tiles: [
             SettingsTile(
               icon: Icons.info_outline_rounded,
               title: 'About ReStep and privacy',
               onTap: () => Navigator.of(context).pushNamed(Routes.about),
-            ),
-            SettingsTile(
-              icon: Icons.science_outlined,
-              title: 'Prototype demo tools',
-              subtitle: 'Simulate detection, reminders and more',
-              onTap: () => Navigator.of(context).pushNamed(Routes.demoTools),
             ),
           ],
         ),

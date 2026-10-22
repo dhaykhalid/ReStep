@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../screens/about/about_screen.dart';
 import '../../screens/about/demo_tools_screen.dart';
+import '../../screens/about/sensor_data_screen.dart';
 import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/sign_up_screen.dart';
@@ -45,6 +46,10 @@ class Routes {
   static const String escalationSettings = '/escalation-settings';
   static const String escalationPrompt = '/escalation-prompt';
   static const String about = '/about';
+  static const String sensorData = '/sensor-data';
+
+  /// Development only: simulation tools for testing without the hardware.
+  /// Not linked from anywhere in the app.
   static const String demoTools = '/demo-tools';
 }
 
@@ -96,6 +101,8 @@ class AppRouter {
         return _route(settings, const EscalationPromptScreen());
       case Routes.about:
         return _route(settings, const AboutScreen());
+      case Routes.sensorData:
+        return _route(settings, const SensorDataScreen());
       case Routes.demoTools:
         return _route(settings, const DemoToolsScreen());
       default:
