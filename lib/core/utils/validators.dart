@@ -17,7 +17,7 @@ class Validators {
       return 'Email is required';
     }
     if (!_emailPattern.hasMatch(value.trim())) {
-      return 'Enter a valid email address';
+      return 'Enter a valid email address, such as name@example.com';
     }
     return null;
   }

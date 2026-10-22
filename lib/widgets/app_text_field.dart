@@ -5,6 +5,11 @@ import '../core/theme/app_colors.dart';
 
 /// Labelled text field with consistent styling, validation and an optional
 /// show/hide control for passwords. Also used as a read-only "picker" field.
+///
+/// Validation feedback: no error is shown while the patient types into a
+/// field for the first time. The field is checked when they leave it after
+/// editing, or when the form is submitted; from then on it is re-checked on
+/// every change, so an error disappears as soon as the input becomes valid.
 class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
@@ -25,6 +30,7 @@ class AppTextField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
     this.autofillHints,
+    this.revalidateOn,
   });
 
   final String label;
@@ -45,12 +51,67 @@ class AppTextField extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final Iterable<String>? autofillHints;
 
+  /// Something else this field's [validator] reads (such as the password a
+  /// "confirm password" field must match). Once the field has been checked,
+  /// it is re-checked whenever this notifies.
+  final Listenable? revalidateOn;
+
   @override
   State<AppTextField> createState() => _AppTextFieldState();
 }
 
 class _AppTextFieldState extends State<AppTextField> {
   late bool _obscure = widget.isPassword;
+
+  final _focusNode = FocusNode();
+
+  /// The patient has typed into the field.
+  bool _edited = false;
+
+  /// The field has been checked at least once (on leaving it or on submit);
+  /// from then on it validates on every change.
+  bool _validated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+    widget.revalidateOn?.addListener(_onDependencyChange);
+  }
+
+  @override
+  void didUpdateWidget(AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.revalidateOn != widget.revalidateOn) {
+      oldWidget.revalidateOn?.removeListener(_onDependencyChange);
+      widget.revalidateOn?.addListener(_onDependencyChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.revalidateOn?.removeListener(_onDependencyChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus && _edited && !_validated) {
+      setState(() => _validated = true);
+    }
+  }
+
+  void _onDependencyChange() {
+    if (_validated) setState(() {});
+  }
+
+  String? _validate(String? value) {
+    final validator = widget.validator;
+    if (validator == null) return null;
+    // A submit validates every field; keep each one live from then on.
+    if (!_validated) setState(() => _validated = true);
+    return validator(value);
+  }
 
   OutlineInputBorder _border(Color color, [double width = 1.5]) {
     return OutlineInputBorder(
@@ -69,7 +130,11 @@ class _AppTextFieldState extends State<AppTextField> {
         const SizedBox(height: 8),
         TextFormField(
           controller: widget.controller,
-          validator: widget.validator,
+          focusNode: _focusNode,
+          validator: widget.validator == null ? null : _validate,
+          autovalidateMode: _validated
+              ? AutovalidateMode.always
+              : AutovalidateMode.disabled,
           obscureText: _obscure,
           autocorrect: !widget.isPassword,
           enableSuggestions: !widget.isPassword,
@@ -78,7 +143,10 @@ class _AppTextFieldState extends State<AppTextField> {
           keyboardType: widget.keyboardType,
           textInputAction: widget.textInputAction,
           maxLines: widget.isPassword ? 1 : widget.maxLines,
-          onChanged: widget.onChanged,
+          onChanged: (value) {
+            _edited = true;
+            widget.onChanged?.call(value);
+          },
           onFieldSubmitted: widget.onFieldSubmitted,
           textCapitalization: widget.textCapitalization,
           inputFormatters: widget.inputFormatters,

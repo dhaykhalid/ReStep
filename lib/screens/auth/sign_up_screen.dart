@@ -142,6 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   prefixIcon: Icons.lock_outline_rounded,
                   validator: (v) =>
                       Validators.confirmPassword(v, _passwordController.text),
+                  revalidateOn: _passwordController,
                   onFieldSubmitted: (_) => _createAccount(),
                 ),
                 const SizedBox(height: 28),
