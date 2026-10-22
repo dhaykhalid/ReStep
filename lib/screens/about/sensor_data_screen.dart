@@ -127,14 +127,6 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
     return AppScaffold(
       title: 'Live sensor data',
       children: [
-        const InfoBanner(
-          tone: ChipTone.neutral,
-          icon: Icons.science_outlined,
-          message:
-              'Development tool: live Shimmer3 readings and CSV export. '
-              'Not part of the finished product.',
-        ),
-        const SizedBox(height: 16),
         if (_service == null)
           const InfoBanner(
             tone: ChipTone.warning,
