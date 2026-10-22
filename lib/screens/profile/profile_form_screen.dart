@@ -27,7 +27,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   late final TextEditingController _dobController;
 
   DateTime? _dateOfBirth;
-  int? _waitingTime;
 
   bool _saving = false;
 
@@ -47,8 +46,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     _dobController = TextEditingController(
       text: _dateOfBirth == null ? '' : Fmt.date(_dateOfBirth!),
     );
-
-    _waitingTime = patient?.waitingTime;
   }
 
   @override
@@ -78,62 +75,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     }
   }
 
-  Future<void> _pickWaitingTime() async {
-    final selected = await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Select waiting time',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.timer_outlined),
-                title: const Text('30 seconds'),
-                onTap: () {
-                  Navigator.pop(context, 30);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.timer_outlined),
-                title: const Text('60 seconds'),
-                onTap: () {
-                  Navigator.pop(context, 60);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.timer_outlined),
-                title: const Text('90 seconds'),
-                onTap: () {
-                  Navigator.pop(context, 90);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.timer_outlined),
-                title: const Text('120 seconds'),
-                onTap: () {
-                  Navigator.pop(context, 120);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (selected != null) {
-      setState(() {
-        _waitingTime = selected;
-      });
-    }
-  }
-
   Future<void> _save() async {
     FocusScope.of(context).unfocus();
 
@@ -157,14 +98,12 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         // The email is fixed at registration; never take it from the form.
         email: current.email,
         dateOfBirth: _dateOfBirth,
-        waitingTime: _waitingTime,
+        // Waiting time is edited only on the escalation settings screen;
+        // carry the stored value through so saving the profile keeps it.
+        waitingTime: current.waitingTime,
       );
 
       await app.updateProfile(updated);
-
-      if (_waitingTime != null) {
-        await app.updateEscalation(_waitingTime!);
-      }
 
       if (!mounted) return;
 
@@ -286,34 +225,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 suffixIcon: const Icon(
                   Icons.calendar_today_outlined,
                   color: AppColors.muted,
-                ),
-              ),
-              const SizedBox(height: 20),
-              AppTextField(
-                label: 'Waiting Time',
-                hint: _waitingTime == null
-                    ? 'Select waiting time'
-                    : '${_waitingTime!} seconds',
-                readOnly: true,
-                onTap: _pickWaitingTime,
-                prefixIcon: Icons.timer_outlined,
-                suffixIcon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.muted,
-                ),
-                validator: (_) {
-                  if (_waitingTime == null) {
-                    return 'Waiting Time is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 6),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'During a freeze, ReStep waits this long for your response before alerting your emergency contact. You can change it anytime.',
-                  style: theme.textTheme.bodySmall,
                 ),
               ),
             ],

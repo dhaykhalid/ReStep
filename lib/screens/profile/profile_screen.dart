@@ -93,7 +93,6 @@ class ProfileScreen extends StatelessWidget {
       title: 'Profile',
       children: [
         AppCard(
-          onTap: () => Navigator.of(context).pushNamed(Routes.editProfile),
           child: Row(
             children: [
               UserAvatar(initials: patient?.initials ?? '?', size: 64),
@@ -116,7 +115,6 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.edit_outlined, color: AppColors.navy, size: 26),
             ],
           ),
         ),
@@ -126,7 +124,7 @@ class ProfileScreen extends StatelessWidget {
             SettingsTile(
               icon: Icons.person_outline_rounded,
               title: 'Edit profile',
-              subtitle: 'Name, email and date of birth',
+              subtitle: 'Update your personal information',
               onTap: () => Navigator.of(context).pushNamed(Routes.editProfile),
             ),
           ],

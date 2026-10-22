@@ -12,7 +12,6 @@ class EmergencyContactsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
-    final theme = Theme.of(context);
     final contacts = app.contacts;
 
     return AppScaffold(
@@ -97,51 +96,6 @@ class EmergencyContactsScreen extends StatelessWidget {
                 ),
               ),
             ),
-        const SectionHeader(title: 'Escalation time'),
-        AppCard(
-          onTap: () =>
-              Navigator.of(context).pushNamed(Routes.escalationSettings),
-          child: Row(
-            children: [
-              Container(
-                height: 48,
-                width: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.skyTint,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.timer_outlined,
-                  color: AppColors.navy,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Waiting time before alerting',
-                      style: theme.textTheme.titleSmall,
-                    ),
-                    Text(
-                      '${app.escalation.waitSeconds} seconds',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.muted,
-                size: 28,
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
