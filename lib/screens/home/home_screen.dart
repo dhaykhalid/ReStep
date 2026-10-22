@@ -166,8 +166,8 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      'No upcoming reminders. Add medications and '
-                      'appointments in Routine.',
+                      'No upcoming reminders. Add reminders for anything '
+                      'you need in Routine.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.muted,
                       ),

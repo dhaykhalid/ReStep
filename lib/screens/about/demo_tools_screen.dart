@@ -159,8 +159,7 @@ class DemoToolsScreen extends StatelessWidget {
           icon: Icons.notifications_active_outlined,
           title: 'Simulate a reminder notification',
           description:
-              'Shows how a medication or appointment reminder '
-              'appears.',
+              'Shows how a reminder appears.',
           onTap: () => _simulateReminder(context),
         ),
       ],

@@ -375,8 +375,7 @@ class _ReminderDeliverySheet extends StatelessWidget {
             Text('Reminder delivery', style: theme.textTheme.titleLarge),
             const SizedBox(height: 6),
             Text(
-              'Choose where your medication and appointment reminders '
-              'are sent.',
+              'Choose where your reminders are sent.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.muted,
               ),
@@ -393,11 +392,6 @@ class _ReminderDeliverySheet extends StatelessWidget {
                   Navigator.of(context).pop();
                 },
               ),
-            Text(
-              'Smartwatch reminders are not available yet. Your choice is '
-              'saved and will be used once they are.',
-              style: theme.textTheme.bodySmall,
-            ),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
@@ -63,7 +64,8 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
       EmergencyContact(
         id: _existing?.id ?? app.newContactId(),
         name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
+        // Already validated, so this is always +9665XXXXXXXX.
+        phone: Validators.normalizeSaudiMobile(_phoneController.text)!,
         isDesignated: _designated,
       ),
     );
@@ -131,7 +133,19 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.phone_outlined,
-                validator: Validators.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s\-()]')),
+                ],
+                validator: Validators.saudiMobile,
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Saudi mobile number: +966 followed by 9 digits starting '
+                  'with 5. A number starting with 05 is also accepted.',
+                  style: theme.textTheme.bodySmall,
+                ),
               ),
             ],
           ),

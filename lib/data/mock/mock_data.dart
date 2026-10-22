@@ -82,13 +82,13 @@ class MockData {
     EmergencyContact(
       id: 'contact-1',
       name: 'Nora Alharbi',
-      phone: '+966 50 765 4321',
+      phone: '+966507654321',
       isDesignated: true,
     ),
     EmergencyContact(
       id: 'contact-2',
       name: 'Faisal Alharbi',
-      phone: '+966 55 987 6543',
+      phone: '+966559876543',
     ),
   ];
 

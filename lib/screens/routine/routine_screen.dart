@@ -25,7 +25,7 @@ class RoutineScreen extends StatelessWidget {
 
     return TabPage(
       title: 'Reminders',
-      subtitle: 'Manage your reminders and stay on schedule.',
+      subtitle: 'Manage your reminders and daily activities.',
       children: [
         PrimaryButton(
           label: 'Add Reminder',
@@ -100,8 +100,7 @@ class _EmptyReminders extends StatelessWidget {
                 Text('No reminders yet', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  'Tap Add Reminder to plan your next medication or '
-                  'appointment.',
+                  'Tap Add Reminder to schedule anything important to you.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.muted,
                   ),

@@ -33,8 +33,8 @@ class AboutScreen extends StatelessWidget {
             'Delivers your vibration or auditory cue on your smartwatch.',
             'Records your episodes so you can review them and share a '
                 'FoG report if you choose.',
-            'Helps you manage medications and appointments, and can alert '
-                'your emergency contact.',
+            'Helps you manage reminders for your daily activities, and can '
+                'alert your emergency contact.',
           ],
         ),
         const SizedBox(height: 16),

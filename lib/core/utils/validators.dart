@@ -3,7 +3,7 @@ class Validators {
   Validators._();
 
   static final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-  static final RegExp _phoneChars = RegExp(r'^[0-9+\-\s()]+$');
+  static final RegExp _saudiMobile = RegExp(r'^(?:(?:\+|00)?966)?0?(5\d{8})$');
 
   static String? required(String? value, String label) {
     if (value == null || value.trim().isEmpty) {
@@ -52,16 +52,30 @@ class Validators {
     return null;
   }
 
-  static String? phone(String? value, {bool isRequired = true}) {
+  static const String saudiMobileError =
+      'Enter a valid Saudi mobile number starting with 5 (9 digits).';
+
+  /// Saudi mobile number for an emergency contact. Accepts the 9 digits after
+  /// +966 (5XXXXXXXX), a local number (05XXXXXXXX) or a full international
+  /// number (+9665XXXXXXXX, 009665XXXXXXXX); see [normalizeSaudiMobile].
+  static String? saudiMobile(String? value) {
     final text = value?.trim() ?? '';
     if (text.isEmpty) {
-      return isRequired ? 'Phone number is required' : null;
+      return 'Phone number is required';
     }
-    final digits = text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (!_phoneChars.hasMatch(text) || digits.length < 8 || digits.length > 15) {
-      return 'Enter a valid phone number';
+    if (normalizeSaudiMobile(text) == null) {
+      return saudiMobileError;
     }
     return null;
+  }
+
+  /// Returns [value] as +9665XXXXXXXX, or null if it is not a valid Saudi
+  /// mobile number. Spaces, dashes and brackets are ignored, and a pasted
+  /// +966 / 00966 / 966 prefix or a leading 0 is not duplicated.
+  static String? normalizeSaudiMobile(String value) {
+    final compact = value.trim().replaceAll(RegExp(r'[\s\-()]'), '');
+    final match = _saudiMobile.firstMatch(compact);
+    return match == null ? null : '+966${match.group(1)}';
   }
 
   static String? durationSeconds(String? value) {
