@@ -182,11 +182,6 @@ class _ReminderFormScreenState extends State<ReminderFormScreen> {
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.place_outlined,
               ),
-              const SizedBox(height: 20),
-              const InfoBanner(
-                icon: Icons.info_outline_rounded,
-                message: 'You can add reminder details now. Saving to your account will be connected later.',
-              ),
             ],
           ),
         ),
