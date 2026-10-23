@@ -1,3 +1,4 @@
+
 /// A person who receives an SMS when emergency escalation conditions are met.
 /// They do not use the ReStep app.
 class EmergencyContact {
@@ -28,8 +29,11 @@ class EmergencyContact {
 }
 
 class EscalationSettings {
-  const EscalationSettings({required this.waitSeconds});
+  const EscalationSettings({
+    required this.waitSeconds,
+  });
 
   /// How long the patient has to respond before the contact is alerted.
   final int waitSeconds;
 }
+

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'cue_settings.dart';
@@ -15,6 +16,7 @@ class UserData {
     required this.cueSettings,
     required this.escalation,
     required this.reminderPreference,
+    this.emergencyContactsEnabled = true,
   });
 
   factory UserData.empty() {
@@ -28,6 +30,7 @@ class UserData {
         waitSeconds: 30,
       ),
       reminderPreference: ReminderPreference.both,
+      emergencyContactsEnabled: true,
     );
   }
 
@@ -38,4 +41,7 @@ class UserData {
   final CueSettings cueSettings;
   final EscalationSettings escalation;
   final ReminderPreference reminderPreference;
+
+  /// Whether the Emergency Contacts feature is enabled.
+  final bool emergencyContactsEnabled;
 }

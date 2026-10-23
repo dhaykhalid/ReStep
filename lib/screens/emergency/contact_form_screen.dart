@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -21,6 +22,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+
   EmergencyContact? _existing;
   bool _designated = false;
   bool _locked = false;
@@ -30,17 +32,21 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
   @override
   void initState() {
     super.initState();
+
     final app = AppScope.read(context);
-    for (final c in app.contacts) {
-      if (c.id == widget.contactId) _existing = c;
+
+    for (final contact in app.contacts) {
+      if (contact.id == widget.contactId) {
+        _existing = contact;
+      }
     }
+
     final existing = _existing;
+
     if (existing != null) {
       _nameController.text = existing.name;
       _phoneController.text = existing.phone;
       _designated = existing.isDesignated;
-      // The current designated contact stays designated until another contact
-      // is chosen.
       _locked = existing.isDesignated;
     } else if (app.contacts.isEmpty) {
       // The first contact is designated automatically.
@@ -58,43 +64,83 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
 
   void _save() {
     FocusScope.of(context).unfocus();
+
     if (!_formKey.currentState!.validate()) return;
+
     final app = AppScope.read(context);
+
     app.saveContact(
       EmergencyContact(
         id: _existing?.id ?? app.newContactId(),
         name: _nameController.text.trim(),
-        // Already validated, so this is always +9665XXXXXXXX.
-        phone: Validators.normalizeSaudiMobile(_phoneController.text)!,
+        phone: Validators.normalizeSaudiMobile(
+          _phoneController.text,
+        )!,
         isDesignated: _designated,
       ),
     );
+
     final messenger = ScaffoldMessenger.of(context);
+
     Navigator.of(context).pop();
-    messenger.showAppMessage('Emergency contact saved', tone: ChipTone.success);
+
+    messenger.showAppMessage(
+      'Emergency contact saved successfully.',
+      tone: ChipTone.success,
+    );
   }
 
   Future<void> _delete() async {
     final app = AppScope.read(context);
+    final contact = _existing!;
+
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+
+    // A designated contact cannot be deleted while other contacts exist.
+    if (contact.isDesignated && app.contacts.length > 1) {
+      messenger.showAppMessage(
+        'You cannot delete this contact because they are designated as your emergency contact.',
+      );
+      return;
+    }
+
+    final isLastContact = app.contacts.length == 1;
+
     final confirmed = await showConfirmDialog(
       context,
       title: 'Remove contact?',
-      message: '${_existing!.name} will no longer be alerted if you need help.',
+      message: isLastContact
+          ? 'This is your only emergency contact. Removing it will disable Emergency Contacts.\n Do you want to continue?'
+          : '${contact.name} will no longer be alerted if you need help.',
       confirmLabel: 'Remove',
       destructive: true,
       icon: Icons.person_remove_outlined,
     );
+
     if (!confirmed) return;
-    app.removeContact(_existing!.id);
+
+    app.removeContact(contact.id);
+
+    // Disable Emergency Contacts when the last contact is deleted.
+    if (isLastContact) {
+      await app.setEmergencyContactsEnabled(false);
+    }
+
+    if (!mounted) return;
+
     navigator.pop();
-    messenger.showAppMessage('Contact removed', tone: ChipTone.success);
+
+    messenger.showAppMessage(
+      'Contact removed successfully.',
+      tone: ChipTone.success,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return AppScaffold(
       title: _isEditing ? 'Edit contact' : 'Add contact',
       bottom: Row(
@@ -107,7 +153,10 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: PrimaryButton(label: 'Save', onPressed: _save),
+            child: PrimaryButton(
+              label: 'Save',
+              onPressed: _save,
+            ),
           ),
         ],
       ),
@@ -123,7 +172,10 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
                 prefixIcon: Icons.person_outline_rounded,
-                validator: (v) => Validators.required(v, 'Name'),
+                validator: (value) => Validators.required(
+                  value,
+                  'Name',
+                ),
               ),
               const SizedBox(height: 20),
               AppTextField(
@@ -134,7 +186,9 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.phone_outlined,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s\-()]')),
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'[0-9+\s\-()]'),
+                  ),
                 ],
                 validator: Validators.saudiMobile,
               ),
@@ -142,8 +196,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Saudi mobile number: +966 followed by 9 digits starting '
-                  'with 5. A number starting with 05 is also accepted.',
+                  'Saudi mobile number: +966 followed by 9 digits starting with 5. A number starting with 05 is also accepted.',
                   style: theme.textTheme.bodySmall,
                 ),
               ),
@@ -166,8 +219,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                     const SizedBox(height: 2),
                     Text(
                       _locked
-                          ? 'This contact receives the alert. To change it, '
-                                'designate another contact.'
+                          ? 'This contact receives the alert. To change it, designate another contact.'
                           : 'Receives the alert if you do not respond.',
                       style: theme.textTheme.bodySmall,
                     ),
@@ -181,15 +233,22 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                   value: _designated,
                   onChanged: _locked
                       ? null
-                      : (v) => setState(() => _designated = v),
-                  thumbColor: const WidgetStatePropertyAll(Colors.white),
-                  trackColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return AppColors.navy;
-                    }
-                    return AppColors.muted;
-                  }),
-                  trackOutlineColor: const WidgetStatePropertyAll(
+                      : (value) => setState(
+                        () => _designated = value,
+                  ),
+                  thumbColor: const WidgetStatePropertyAll(
+                    Colors.white,
+                  ),
+                  trackColor: WidgetStateProperty.resolveWith(
+                        (states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return AppColors.navy;
+                      }
+                      return AppColors.muted;
+                    },
+                  ),
+                  trackOutlineColor:
+                  const WidgetStatePropertyAll(
                     Colors.transparent,
                   ),
                 ),

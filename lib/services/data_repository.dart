@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +42,8 @@ abstract class DataRepository {
   Future<void> saveReminderPreference(
       ReminderPreference preference,
       );
+
+  Future<void> saveEmergencyContactsEnabled(bool enabled);
 }
 
 /// Prototype repository.
@@ -89,6 +92,9 @@ class MockDataRepository implements DataRepository {
   Future<void> saveReminderPreference(
       ReminderPreference preference,
       ) async {}
+
+  @override
+  Future<void> saveEmergencyContactsEnabled(bool enabled) async {}
 }
 
 /// Firebase repository.
@@ -183,8 +189,7 @@ class FirebaseDataRepository implements DataRepository {
         id: doc.id,
         name: data['name'] as String? ?? '',
         phone: data['phone'] as String? ?? '',
-        isDesignated:
-        data['is_designated'] as bool? ?? false,
+        isDesignated: data['is_designated'] as bool? ?? false,
       );
     }).toList();
 
@@ -213,9 +218,7 @@ class FirebaseDataRepository implements DataRepository {
             '',
         context: data['context'] as String? ?? '',
         date: reminderDate,
-        time: _parseTime(
-          data['time'] as String?,
-        ),
+        time: _parseTime(data['time'] as String?),
         location: data['location'] as String? ?? '',
         frequency: data['frequency'] as String? ?? 'Once',
       );
@@ -267,10 +270,14 @@ class FirebaseDataRepository implements DataRepository {
           30,
     );
 
-    final reminderPreference =
-    _reminderPreferenceFromFirestore(
+    final reminderPreference = _reminderPreferenceFromFirestore(
       preferences?['reminder_preference'] as String?,
     );
+
+    // Emergency Contacts enabled/disabled preference.
+    // Defaults to true for existing accounts without this field.
+    final emergencyContactsEnabled =
+        preferences?['emergency_contacts_enabled'] as bool? ?? true;
 
     return UserData(
       episodes: episodes,
@@ -280,6 +287,7 @@ class FirebaseDataRepository implements DataRepository {
       cueSettings: cueSettings,
       escalation: escalation,
       reminderPreference: reminderPreference,
+      emergencyContactsEnabled: emergencyContactsEnabled,
     );
   }
 
@@ -301,6 +309,16 @@ class FirebaseDataRepository implements DataRepository {
   @override
   Future<void> deleteContact(String id) async {
     await _emergencyContacts.doc(id).delete();
+  }
+
+  @override
+  Future<void> saveEmergencyContactsEnabled(bool enabled) async {
+    await _preferences.set(
+      {
+        'emergency_contacts_enabled': enabled,
+      },
+      SetOptions(merge: true),
+    );
   }
 
   // ------------------------------------------------------------
@@ -416,11 +434,9 @@ class FirebaseDataRepository implements DataRepository {
       String id,
       Map<String, dynamic> data,
       ) {
-    final startTimestamp =
-    data['start_time'] as Timestamp?;
+    final startTimestamp = data['start_time'] as Timestamp?;
 
-    final startTime =
-        startTimestamp?.toDate() ?? DateTime.now();
+    final startTime = startTimestamp?.toDate() ?? DateTime.now();
 
     final durationSeconds =
         (data['duration_seconds'] as num?)?.toInt() ?? 1;
@@ -433,8 +449,7 @@ class FirebaseDataRepository implements DataRepository {
       data['cue_delivered'] as String?,
     );
 
-    final contextData =
-    data['context'] as Map<String, dynamic>?;
+    final contextData = data['context'] as Map<String, dynamic>?;
 
     EpisodeContext? context;
 
@@ -445,8 +460,7 @@ class FirebaseDataRepository implements DataRepository {
               .toList() ??
               const <String>[];
 
-      final note =
-      contextData['note'] as String?;
+      final note = contextData['note'] as String?;
 
       context = EpisodeContext(
         activities: activities,
@@ -454,24 +468,18 @@ class FirebaseDataRepository implements DataRepository {
       );
     }
 
-    final alertTimestamp =
-    data['alert_sent_at'] as Timestamp?;
+    final alertTimestamp = data['alert_sent_at'] as Timestamp?;
 
     return FogEpisode(
       id: id,
       startTime: startTime,
-      duration: Duration(
-        seconds: durationSeconds,
-      ),
+      duration: Duration(seconds: durationSeconds),
       source: source,
       cueDelivered: cueDelivered,
       context: context,
-      alertContactName:
-      data['alert_contact_name'] as String?,
-      alertSentAt:
-      alertTimestamp?.toDate(),
-      alertCancelled:
-      data['alert_cancelled'] as bool? ?? false,
+      alertContactName: data['alert_contact_name'] as String?,
+      alertSentAt: alertTimestamp?.toDate(),
+      alertCancelled: data['alert_cancelled'] as bool? ?? false,
     );
   }
 
@@ -487,10 +495,8 @@ class FirebaseDataRepository implements DataRepository {
       id: id,
       name: data['name'] as String? ?? kind.label,
       kind: kind,
-      connected:
-      data['connected'] as bool? ?? false,
-      batteryPercent:
-      (data['battery_percent'] as num?)?.toInt(),
+      connected: data['connected'] as bool? ?? false,
+      batteryPercent: (data['battery_percent'] as num?)?.toInt(),
     );
   }
 
@@ -507,15 +513,12 @@ class FirebaseDataRepository implements DataRepository {
       ) ??
           CueSettings.defaults.pattern,
       durationSeconds:
-      (data['cue_duration_seconds'] as num?)
-          ?.toInt() ??
+      (data['cue_duration_seconds'] as num?)?.toInt() ??
           CueSettings.defaults.durationSeconds,
     );
   }
 
-  EpisodeSource _episodeSourceFromString(
-      String? value,
-      ) {
+  EpisodeSource _episodeSourceFromString(String? value) {
     for (final source in EpisodeSource.values) {
       if (source.name == value) {
         return source;
@@ -525,9 +528,7 @@ class FirebaseDataRepository implements DataRepository {
     return EpisodeSource.manual;
   }
 
-  CueType? _cueTypeFromString(
-      String? value,
-      ) {
+  CueType? _cueTypeFromString(String? value) {
     if (value == null) return null;
 
     for (final type in CueType.values) {
@@ -539,9 +540,7 @@ class FirebaseDataRepository implements DataRepository {
     return null;
   }
 
-  CuePattern? _cuePatternFromString(
-      String? value,
-      ) {
+  CuePattern? _cuePatternFromString(String? value) {
     if (value == null) return null;
 
     for (final pattern in CuePattern.values) {
@@ -553,9 +552,7 @@ class FirebaseDataRepository implements DataRepository {
     return null;
   }
 
-  DeviceKind _deviceKindFromString(
-      String? value,
-      ) {
+  DeviceKind _deviceKindFromString(String? value) {
     for (final kind in DeviceKind.values) {
       if (kind.name == value) {
         return kind;
@@ -568,8 +565,7 @@ class FirebaseDataRepository implements DataRepository {
   ReminderPreference _reminderPreferenceFromFirestore(
       String? value,
       ) {
-    for (final preference
-    in ReminderPreference.values) {
+    for (final preference in ReminderPreference.values) {
       if (preference.name == value) {
         return preference;
       }
@@ -579,10 +575,8 @@ class FirebaseDataRepository implements DataRepository {
   }
 
   String _formatTime(TimeOfDay time) {
-    final hour =
-    time.hour.toString().padLeft(2, '0');
-    final minute =
-    time.minute.toString().padLeft(2, '0');
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
 
     return '$hour:$minute';
   }
@@ -597,10 +591,8 @@ class FirebaseDataRepository implements DataRepository {
 
     final parts = value.split(':');
 
-    final hour =
-        int.tryParse(parts[0]) ?? 10;
-    final minute =
-        int.tryParse(parts[1]) ?? 0;
+    final hour = int.tryParse(parts[0]) ?? 10;
+    final minute = int.tryParse(parts[1]) ?? 0;
 
     return TimeOfDay(
       hour: hour,
