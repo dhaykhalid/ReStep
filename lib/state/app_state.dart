@@ -122,11 +122,16 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
+  /// The device of this kind to show as "the" sensor/watch: the connected one
+  /// if there is one, otherwise the first saved one.
   ReStepDevice? _deviceOfKind(DeviceKind kind) {
+    ReStepDevice? first;
     for (final device in _devices) {
-      if (device.kind == kind) return device;
+      if (device.kind != kind) continue;
+      if (device.connected) return device;
+      first ??= device;
     }
-    return null;
+    return first;
   }
 
   String _newId(String prefix) =>
@@ -192,10 +197,9 @@ class AppState extends ChangeNotifier {
     if (sensor != null && sensor!.connected) return;
 
     if (!_devices.any((device) => device.id == saved.id)) {
-      _devices = [
-        ..._devices.where((device) => device.kind != saved.kind),
-        saved,
-      ]..sort((a, b) => a.kind.index.compareTo(b.kind.index));
+      // Add it without removing the other saved devices.
+      _devices = [..._devices, saved]
+        ..sort((a, b) => a.kind.index.compareTo(b.kind.index));
 
       notifyListeners();
     }
@@ -223,7 +227,12 @@ class AppState extends ChangeNotifier {
 
     _contacts = _normaliseDesignated([...data.contacts]);
     _reminders = [...data.reminders];
-    _devices = [...data.devices];
+    // Saved devices start as "Not connected"; the live state comes from the
+    // sensor after it connects.
+    _devices = [
+      for (final d in data.devices)
+        ReStepDevice(id: d.id, name: d.name, kind: d.kind),
+    ];
 
     _cueSettings = data.cueSettings;
     _escalation = data.escalation;
@@ -678,20 +687,56 @@ class AppState extends ChangeNotifier {
     final ok = await _deviceService.connect(device);
 
     if (ok) {
-      final connected = device.copyWith(
-        connected: true,
-        batteryPercent: device.batteryPercent,
-      );
+      final index = _devices.indexWhere((item) => item.id == device.id);
+      final current = index >= 0 ? _devices[index] : device;
+      final connected = current.copyWith(connected: true);
 
-      _devices = [
-        ..._devices.where((item) => item.kind != device.kind),
-        connected,
-      ]..sort((a, b) => a.kind.index.compareTo(b.kind.index));
-
+      // Keep every saved device; add this one if it is new.
+      final copy = [..._devices];
+      if (index >= 0) {
+        copy[index] = connected;
+      } else {
+        copy.add(connected);
+      }
+      _devices = copy..sort((a, b) => a.kind.index.compareTo(b.kind.index));
       notifyListeners();
+
+      // Save it so it shows under "My devices" next time.
+      if (index < 0) {
+        try {
+          await _repository.saveDevice(
+            ReStepDevice(id: device.id, name: device.name, kind: device.kind),
+          );
+        } catch (_) {
+          // Saving failed (for example no internet); the device still works
+          // in this session.
+        }
+      }
     }
 
     return ok;
+  }
+
+  /// "Remove device": disconnects it if needed and deletes it from the
+  /// saved list.
+  Future<void> removeDevice(String id) async {
+    final index = _devices.indexWhere((device) => device.id == id);
+    if (index < 0) return;
+    final device = _devices[index];
+
+    if (device.connected) {
+      await _deviceService.disconnect(device);
+    }
+    await _deviceService.forgetDevice(device);
+
+    _devices = [..._devices]..removeAt(index);
+    notifyListeners();
+
+    try {
+      await _repository.deleteDevice(id);
+    } catch (_) {
+      // It is removed from the list on this phone anyway.
+    }
   }
 
   Future<void> disconnectDevice(String id) async {

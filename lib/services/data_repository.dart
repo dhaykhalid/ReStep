@@ -44,6 +44,14 @@ abstract class DataRepository {
       );
 
   Future<void> saveEmergencyContactsEnabled(bool enabled);
+
+
+  /// Saves a sensor the patient has connected, so it appears under
+  /// "My devices" next time.
+  Future<void> saveDevice(ReStepDevice device);
+
+  /// Removes a saved sensor ("Remove device").
+  Future<void> deleteDevice(String id);
 }
 
 /// Prototype repository.
@@ -95,6 +103,12 @@ class MockDataRepository implements DataRepository {
 
   @override
   Future<void> saveEmergencyContactsEnabled(bool enabled) async {}
+
+  @override
+  Future<void> saveDevice(ReStepDevice device) async {}
+
+  @override
+  Future<void> deleteDevice(String id) async {}
 }
 
 /// Firebase repository.
@@ -192,6 +206,7 @@ class FirebaseDataRepository implements DataRepository {
         isDesignated: data['is_designated'] as bool? ?? false,
       );
     }).toList();
+
 
     // ----------------------------------------------------------
     // Reminders
@@ -320,6 +335,28 @@ class FirebaseDataRepository implements DataRepository {
       SetOptions(merge: true),
     );
   }
+
+
+
+  // ------------------------------------------------------------
+  // SAVED DEVICES
+  // ------------------------------------------------------------
+
+  // Only the device identity is stored. Connection state and battery level
+  // are live values and are not saved.
+  @override
+  Future<void> saveDevice(ReStepDevice device) async {
+    await _devices.doc(device.id).set({
+      'name': device.name,
+      'kind': device.kind.name,
+    });
+  }
+
+  @override
+  Future<void> deleteDevice(String id) async {
+    await _devices.doc(id).delete();
+  }
+
 
   // ------------------------------------------------------------
   // REMINDERS

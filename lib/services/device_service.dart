@@ -26,6 +26,7 @@ abstract class DeviceService {
   /// The sensor the patient connected last time (for automatic reconnection),
   /// or null if there is none.
   Future<ReStepDevice?> lastConnectedDevice();
+  Future<void> forgetDevice(ReStepDevice device);
 }
 
 class MockDeviceService implements DeviceService {
@@ -38,6 +39,9 @@ class MockDeviceService implements DeviceService {
 
   @override
   Future<ReStepDevice?> lastConnectedDevice() async => null;
+
+  @override
+  Future<void> forgetDevice(ReStepDevice device) async {}
 
   @override
   Future<List<ReStepDevice>> scanNearby() async {

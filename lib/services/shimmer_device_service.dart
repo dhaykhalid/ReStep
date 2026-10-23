@@ -260,6 +260,17 @@ class ShimmerDeviceService implements DeviceService {
     );
   }
 
+  @override
+  Future<void> forgetDevice(ReStepDevice device) async {
+    final mac = device.id.toUpperCase();
+    if (_autoMac == mac) {
+      _autoMac = null;
+      _stopRetrying();
+    }
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString(_savedMacKey) == mac) await _forgetDevice();
+  }
+
   Future<void> _saveDevice(String mac, String name) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_savedMacKey, mac);
