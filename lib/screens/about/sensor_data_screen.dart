@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../services/shimmer_device_service.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
+import 'live_chart.dart';
 
 /// Development tool (this phase only): shows live Shimmer3 readings and
 /// exports a recording as CSV. Delete this file and its button in
@@ -33,6 +34,11 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
   bool _recording = false;
   final List<ShimmerSample> _recorded = [];
 
+
+  // Last 5 seconds of readings for the live charts (60 Hz x 5 s).
+  static const int _chartLength = 300;
+  final List<ShimmerSample> _history = [];
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -44,8 +50,8 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
 
     _sub = deviceService.samples.listen(_onSample);
 
-    // Refresh the numbers on screen 5 times per second (not 60).
-    _uiTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+    // Refresh the numbers on screen 10 times per second (not 60).
+    _uiTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (mounted) setState(() {});
     });
   }
@@ -53,6 +59,8 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
   void _onSample(ShimmerSample sample) {
     _latest = sample;
     if (_recording) _recorded.add(sample);
+    _history.add(sample);
+    if (_history.length > _chartLength) _history.removeAt(0);
 
     // Count how many samples arrive per second.
     _samplesThisSecond++;
@@ -159,6 +167,20 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        LiveChart(
+          title: 'Accelerometer (m/s²)',
+          x: [for (final h in _history) h.ax ?? 0],
+          y: [for (final h in _history) h.ay ?? 0],
+          z: [for (final h in _history) h.az ?? 0],
+        ),
+        const SizedBox(height: 16),
+        LiveChart(
+          title: 'Gyroscope (deg/s)',
+          x: [for (final h in _history) h.gx ?? 0],
+          y: [for (final h in _history) h.gy ?? 0],
+          z: [for (final h in _history) h.gz ?? 0],
+        ),
         const SizedBox(height: 20),
         Text(
           _recording
@@ -170,6 +192,7 @@ class _SensorDataScreenState extends State<SensorDataScreen> {
             color: _recording ? Colors.red : AppColors.muted,
           ),
         ),
+
         const SizedBox(height: 12),
         if (_recording)
           PrimaryButton(
