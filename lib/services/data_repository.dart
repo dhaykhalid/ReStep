@@ -214,28 +214,33 @@ class FirebaseDataRepository implements DataRepository {
 
     final remindersSnapshot = await _reminders.get();
 
+    // Older documents may still have a `context` field (ignored) and no
+    // `repeat_days` (treated as none).
     final reminders = remindersSnapshot.docs.map((doc) {
       final data = doc.data();
 
-      final timestamp = data['date'] as Timestamp?;
-
-      final reminderDate = timestamp?.toDate() ??
-          DateTime(
-            now.year,
-            now.month,
-            now.day,
-          );
+      final frequency = ReminderFrequencyX.fromFirestore(
+        data['frequency'] as String?,
+      );
+      final rawDate = data['date'];
+      final date = rawDate is Timestamp ? rawDate.toDate() : null;
+      final rawDays = data['repeat_days'];
 
       return Reminder(
         id: doc.id,
         title: data['title'] as String? ??
             data['titel'] as String? ??
             '',
-        context: data['context'] as String? ?? '',
-        date: reminderDate,
+        frequency: frequency,
+        // A one-time reminder without a date falls back to today, as before.
+        date: frequency == ReminderFrequency.once
+            ? date ?? DateTime(now.year, now.month, now.day)
+            : null,
+        repeatDays: frequency == ReminderFrequency.weekly
+            ? ReminderDays.normalize(rawDays is List ? rawDays : const [])
+            : const [],
         time: _parseTime(data['time'] as String?),
         location: data['location'] as String? ?? '',
-        frequency: data['frequency'] as String? ?? 'Once',
       );
     }).toList();
 
@@ -362,18 +367,31 @@ class FirebaseDataRepository implements DataRepository {
   // REMINDERS
   // ------------------------------------------------------------
 
+  /// Creates or updates the reminder document. Values that do not apply to
+  /// the repeat option are cleared (date null, repeat_days empty), and the
+  /// retired `context` field is removed from older documents.
   @override
   Future<void> saveReminder(
       Reminder reminder,
       ) async {
-    await _reminders.doc(reminder.id).set({
-      'title': reminder.title,
-      'context': reminder.context,
-      'date': Timestamp.fromDate(reminder.date),
-      'time': _formatTime(reminder.time),
-      'location': reminder.location,
-      'frequency': reminder.frequency,
-    });
+    final date = reminder.date;
+    final isOnce = reminder.frequency == ReminderFrequency.once;
+    final isWeekly = reminder.frequency == ReminderFrequency.weekly;
+
+    await _reminders.doc(reminder.id).set(
+      {
+        'title': reminder.title,
+        'frequency': reminder.frequency.firestoreValue,
+        'date': isOnce && date != null
+            ? Timestamp.fromDate(DateTime(date.year, date.month, date.day))
+            : null,
+        'repeat_days': isWeekly ? reminder.repeatDays : <String>[],
+        'time': _formatTime(reminder.time),
+        'location': reminder.location,
+        'context': FieldValue.delete(),
+      },
+      SetOptions(merge: true),
+    );
   }
 
   @override

@@ -595,26 +595,7 @@ class AppState extends ChangeNotifier {
       list.add(reminder);
     }
 
-    list.sort((a, b) {
-      final aDateTime = DateTime(
-        a.date.year,
-        a.date.month,
-        a.date.day,
-        a.time.hour,
-        a.time.minute,
-      );
-
-      final bDateTime = DateTime(
-        b.date.year,
-        b.date.month,
-        b.date.day,
-        b.time.hour,
-        b.time.minute,
-      );
-
-      return aDateTime.compareTo(bDateTime);
-    });
-
+    // [upcomingReminders] orders them by their next occurrence.
     _reminders = list;
 
     await _repository.saveReminder(reminder);
@@ -639,31 +620,47 @@ class AppState extends ChangeNotifier {
     await _repository.saveReminderPreference(preference);
   }
 
+  Reminder? reminderById(String id) {
+    for (final reminder in _reminders) {
+      if (reminder.id == id) return reminder;
+    }
+    return null;
+  }
+
+  /// The next occurrence of each reminder. Dismissing a daily or weekly
+  /// occurrence moves that reminder on to its following occurrence.
   List<UpcomingReminder> get upcomingReminders {
     final items = <UpcomingReminder>[];
+    final now = _clock();
 
     for (final reminder in _reminders) {
-      final when = DateTime(
-        reminder.date.year,
-        reminder.date.month,
-        reminder.date.day,
-        reminder.time.hour,
-        reminder.time.minute,
-      );
-
-      final key = '${reminder.id}@${when.toIso8601String()}';
-
-      if (_dismissedReminders.contains(key)) continue;
+      var from = now;
+      DateTime? when;
+      String? key;
+      // At most one week of daily or weekly occurrences can be dismissed.
+      for (var i = 0; i < 8; i++) {
+        when = reminder.nextOccurrence(from);
+        if (when == null) break;
+        key = '${reminder.id}@${when.toIso8601String()}';
+        if (!_dismissedReminders.contains(key)) break;
+        if (reminder.frequency == ReminderFrequency.once) {
+          when = null;
+          break;
+        }
+        from = when.add(const Duration(minutes: 1));
+        when = null;
+      }
+      if (when == null || key == null) continue;
 
       items.add(
         UpcomingReminder(
           key: key,
           title: reminder.title,
-          detail: reminder.location.isEmpty
-              ? reminder.context
-              : reminder.location,
+          detail: reminder.location,
           when: when,
           isMedication: false,
+          reminderId: reminder.id,
+          schedule: reminder.scheduleLabel,
         ),
       );
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
+import '../../models/routine.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
 import '../home/home_screen.dart' show ReminderCard;
@@ -15,6 +16,14 @@ class RoutineScreen extends StatelessWidget {
   void _addReminder(BuildContext context) {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => const ReminderFormScreen()));
+  }
+
+  void _editReminder(BuildContext context, UpcomingReminder reminder) {
+    final id = reminder.reminderId;
+    if (id == null) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ReminderFormScreen(reminderId: id),
+    ));
   }
 
   @override
@@ -51,13 +60,21 @@ class RoutineScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SectionHeader(title: 'Next reminder', topPadding: 24),
-                    ReminderCard(reminder: reminders.first, now: now),
+                    ReminderCard(
+                      reminder: reminders.first,
+                      now: now,
+                      onTap: () => _editReminder(context, reminders.first),
+                    ),
                     if (reminders.length > 1) ...[
                       SectionHeader(title: 'Later (${reminders.length - 1})'),
                       for (final reminder in reminders.skip(1))
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: ReminderCard(reminder: reminder, now: now),
+                          child: ReminderCard(
+                            reminder: reminder,
+                            now: now,
+                            onTap: () => _editReminder(context, reminder),
+                          ),
                         ),
                     ],
                   ],
