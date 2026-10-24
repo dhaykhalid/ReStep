@@ -156,11 +156,26 @@ class Reminder {
     required this.time,
     required this.location,
     this.repeatDays = const [],
+    this.isEnabled = true,
   });
 
   final String id;
   final String title;
   final ReminderFrequency frequency;
+
+  /// False while the reminder is paused (Firestore `is_enabled`).
+  final bool isEnabled;
+
+  Reminder copyWith({bool? isEnabled}) => Reminder(
+        id: id,
+        title: title,
+        frequency: frequency,
+        date: date,
+        time: time,
+        location: location,
+        repeatDays: repeatDays,
+        isEnabled: isEnabled ?? this.isEnabled,
+      );
 
   /// The day of a one-time reminder; null for daily and weekly reminders.
   final DateTime? date;

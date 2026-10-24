@@ -136,6 +136,7 @@ void main() {
         'repeat_days': <String>[],
         'time': '10:00',
         'location': 'Clinic',
+        'is_enabled': true,
       });
 
       // Once -> Weekly clears the date.
@@ -151,6 +152,7 @@ void main() {
         'repeat_days': ['Sun', 'Tue', 'Thu'],
         'time': '18:05',
         'location': '',
+        'is_enabled': true,
       });
 
       // Weekly -> Daily clears the days.

@@ -168,6 +168,8 @@ class _ReminderFormScreenState extends State<ReminderFormScreen> {
           : const [],
       time: _time,
       location: _locationController.text.trim(),
+      // New reminders start enabled; editing keeps the current state.
+      isEnabled: _existing?.isEnabled ?? true,
     );
 
     final messenger = ScaffoldMessenger.of(context);

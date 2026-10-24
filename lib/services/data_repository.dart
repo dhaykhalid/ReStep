@@ -33,6 +33,9 @@ abstract class DataRepository {
 
   Future<void> deleteReminder(String id);
 
+  /// Pauses or resumes a reminder without changing anything else.
+  Future<void> setReminderEnabled(String id, bool enabled);
+
   Future<void> saveCueSettings(CueSettings settings);
 
   Future<void> saveEscalationSettings(
@@ -87,6 +90,9 @@ class MockDataRepository implements DataRepository {
 
   @override
   Future<void> deleteReminder(String id) async {}
+
+  @override
+  Future<void> setReminderEnabled(String id, bool enabled) async {}
 
   @override
   Future<void> saveCueSettings(CueSettings settings) async {}
@@ -241,6 +247,8 @@ class FirebaseDataRepository implements DataRepository {
             : const [],
         time: _parseTime(data['time'] as String?),
         location: data['location'] as String? ?? '',
+        // Documents saved before `is_enabled` existed are enabled.
+        isEnabled: data['is_enabled'] is bool ? data['is_enabled'] as bool : true,
       );
     }).toList();
 
@@ -388,6 +396,7 @@ class FirebaseDataRepository implements DataRepository {
         'repeat_days': isWeekly ? reminder.repeatDays : <String>[],
         'time': _formatTime(reminder.time),
         'location': reminder.location,
+        'is_enabled': reminder.isEnabled,
         'context': FieldValue.delete(),
       },
       SetOptions(merge: true),
@@ -397,6 +406,13 @@ class FirebaseDataRepository implements DataRepository {
   @override
   Future<void> deleteReminder(String id) async {
     await _reminders.doc(id).delete();
+  }
+
+  /// Only `is_enabled` changes. `update` fails if the reminder no longer
+  /// exists, instead of creating an empty document.
+  @override
+  Future<void> setReminderEnabled(String id, bool enabled) async {
+    await _reminders.doc(id).update({'is_enabled': enabled});
   }
 
   // ------------------------------------------------------------
