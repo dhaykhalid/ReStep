@@ -595,39 +595,80 @@ class AppState extends ChangeNotifier {
       list.add(reminder);
     }
 
-    list.sort((a, b) {
-      final aDateTime = DateTime(
-        a.date.year,
-        a.date.month,
-        a.date.day,
-        a.time.hour,
-        a.time.minute,
-      );
-
-      final bDateTime = DateTime(
-        b.date.year,
-        b.date.month,
-        b.date.day,
-        b.time.hour,
-        b.time.minute,
-      );
-
-      return aDateTime.compareTo(bDateTime);
-    });
-
+    // [upcomingReminders] orders them by their next occurrence.
     _reminders = list;
 
     await _repository.saveReminder(reminder);
     notifyListeners();
   }
 
+  /// Removes the reminder from the list only once Firestore has deleted it,
+  /// so a failed delete leaves it visible.
   Future<void> deleteReminder(String id) async {
+    await _repository.deleteReminder(id);
+
     _reminders = _reminders
         .where((reminder) => reminder.id != id)
         .toList();
-
-    await _repository.deleteReminder(id);
     notifyListeners();
+  }
+
+  /// Pauses or resumes a reminder. The switch moves straight away; if
+  /// Firestore rejects the change it moves back and the error is rethrown.
+  Future<void> setReminderEnabled(String id, bool enabled) async {
+    final previous = reminderById(id);
+    if (previous == null || previous.isEnabled == enabled) return;
+
+    _replaceReminder(previous.copyWith(isEnabled: enabled));
+    notifyListeners();
+
+    try {
+      await _repository.setReminderEnabled(id, enabled);
+    } catch (_) {
+      // Restore unless the reminder changed or was removed meanwhile.
+      if (reminderById(id)?.isEnabled == enabled) {
+        _replaceReminder(previous);
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
+  void _replaceReminder(Reminder reminder) {
+    _reminders = [
+      for (final item in _reminders)
+        if (item.id == reminder.id) reminder else item,
+    ];
+  }
+
+  /// Every saved reminder, enabled or not, ordered by its next occurrence.
+  /// One-time reminders whose time has passed, and weekly reminders with no
+  /// days, come last.
+  List<Reminder> get sortedReminders {
+    final now = _clock();
+    DateTime? upcoming(Reminder r) {
+      final next = r.nextOccurrence(now);
+      return next == null || next.isBefore(now) ? null : next;
+    }
+
+    final list = [..._reminders];
+    list.sort((a, b) {
+      final x = upcoming(a);
+      final y = upcoming(b);
+      if (x != null && y != null) {
+        final byTime = x.compareTo(y);
+        if (byTime != 0) return byTime;
+      } else if (x != null || y != null) {
+        return x != null ? -1 : 1;
+      } else {
+        // Both past or never due: most recent first.
+        final pa = a.nextOccurrence(now);
+        final pb = b.nextOccurrence(now);
+        if (pa != null && pb != null && pa != pb) return pb.compareTo(pa);
+      }
+      return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    });
+    return list;
   }
 
   Future<void> setReminderPreference(
@@ -639,31 +680,49 @@ class AppState extends ChangeNotifier {
     await _repository.saveReminderPreference(preference);
   }
 
+  Reminder? reminderById(String id) {
+    for (final reminder in _reminders) {
+      if (reminder.id == id) return reminder;
+    }
+    return null;
+  }
+
+  /// The next occurrence of each enabled reminder (used for Home's "Next
+  /// reminder"). Dismissing a daily or weekly occurrence moves that reminder
+  /// on to its following occurrence.
   List<UpcomingReminder> get upcomingReminders {
     final items = <UpcomingReminder>[];
+    final now = _clock();
 
     for (final reminder in _reminders) {
-      final when = DateTime(
-        reminder.date.year,
-        reminder.date.month,
-        reminder.date.day,
-        reminder.time.hour,
-        reminder.time.minute,
-      );
-
-      final key = '${reminder.id}@${when.toIso8601String()}';
-
-      if (_dismissedReminders.contains(key)) continue;
+      if (!reminder.isEnabled) continue;
+      var from = now;
+      DateTime? when;
+      String? key;
+      // At most one week of daily or weekly occurrences can be dismissed.
+      for (var i = 0; i < 8; i++) {
+        when = reminder.nextOccurrence(from);
+        if (when == null) break;
+        key = '${reminder.id}@${when.toIso8601String()}';
+        if (!_dismissedReminders.contains(key)) break;
+        if (reminder.frequency == ReminderFrequency.once) {
+          when = null;
+          break;
+        }
+        from = when.add(const Duration(minutes: 1));
+        when = null;
+      }
+      if (when == null || key == null) continue;
 
       items.add(
         UpcomingReminder(
           key: key,
           title: reminder.title,
-          detail: reminder.location.isEmpty
-              ? reminder.context
-              : reminder.location,
+          detail: reminder.location,
           when: when,
           isMedication: false,
+          reminderId: reminder.id,
+          schedule: reminder.scheduleLabel,
         ),
       );
     }

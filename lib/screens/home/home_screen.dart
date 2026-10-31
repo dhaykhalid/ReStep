@@ -209,18 +209,27 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// A medication / appointment reminder with a Dismiss button.
+/// A reminder occurrence with its schedule and a Dismiss button.
 class ReminderCard extends StatelessWidget {
-  const ReminderCard({super.key, required this.reminder, required this.now});
+  const ReminderCard({
+    super.key,
+    required this.reminder,
+    required this.now,
+    this.onTap,
+  });
 
   final UpcomingReminder reminder;
   final DateTime now;
+
+  /// Opens the reminder, for example to edit it.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.read(context);
     final theme = Theme.of(context);
     return AppCard(
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -250,21 +259,24 @@ class ReminderCard extends StatelessWidget {
                     Text(reminder.title, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 2),
                     Text(
-                      '${Fmt.relativeDay(reminder.when, now)} · '
-                      '${Fmt.time(reminder.when)}',
+                      reminder.schedule ??
+                          '${Fmt.relativeDay(reminder.when, now)} · '
+                              '${Fmt.time(reminder.when)}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.navy,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      reminder.detail,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.muted,
+                    if (reminder.detail.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        reminder.detail,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.muted,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
