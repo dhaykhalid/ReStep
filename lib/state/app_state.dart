@@ -712,7 +712,8 @@ class AppState extends ChangeNotifier {
         from = when.add(const Duration(minutes: 1));
         when = null;
       }
-      if (when == null || key == null) continue;
+      // A one-time reminder whose time has passed is no longer upcoming.
+      if (when == null || key == null || when.isBefore(now)) continue;
 
       items.add(
         UpcomingReminder(
@@ -730,6 +731,16 @@ class AppState extends ChangeNotifier {
     items.sort((a, b) => a.when.compareTo(b.when));
 
     return items;
+  }
+
+  /// The enabled reminder that is due soonest (Home's "Next reminder"), or
+  /// null when nothing is upcoming.
+  Reminder? get nextReminder {
+    for (final upcoming in upcomingReminders) {
+      final reminder = reminderById(upcoming.reminderId ?? '');
+      if (reminder != null) return reminder;
+    }
+    return null;
   }
 
   void dismissReminder(String key) {

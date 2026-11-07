@@ -379,4 +379,32 @@ void main() {
         app.upcomingReminders.firstWhere((r) => r.reminderId == 'daily');
     expect(daily.when, DateTime(2026, 10, 25, 9, 30));
   });
+
+  test('next reminder skips paused and past one-time reminders', () async {
+    final app = _appState();
+    // Yesterday: already passed.
+    await app.saveReminder(_reminder(id: 'past', date: DateTime(2026, 10, 23)));
+    // Earlier today, before the clock: passed too.
+    await app.saveReminder(_reminder(
+        id: 'early',
+        date: DateTime(2026, 10, 24),
+        time: const TimeOfDay(hour: 8, minute: 0)));
+    await app.saveReminder(_reminder(
+        id: 'weekly', frequency: ReminderFrequency.weekly, days: ['Mon']));
+    await app.saveReminder(_reminder(
+        id: 'daily',
+        frequency: ReminderFrequency.daily,
+        time: const TimeOfDay(hour: 9, minute: 30)));
+
+    expect(app.upcomingReminders.map((r) => r.reminderId),
+        ['daily', 'weekly']);
+    expect(app.nextReminder?.id, 'daily');
+
+    // Pausing the next reminder moves Home on to the following one.
+    await app.setReminderEnabled('daily', false);
+    expect(app.nextReminder?.id, 'weekly');
+
+    await app.deleteReminder('weekly');
+    expect(app.nextReminder, isNull);
+  });
 }

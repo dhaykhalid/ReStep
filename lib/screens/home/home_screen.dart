@@ -8,10 +8,10 @@ import '../../models/device.dart';
 import '../../models/episode_stats.dart';
 import '../../models/fog_episode.dart';
 import '../../models/period.dart';
-import '../../models/routine.dart';
 import '../../state/app_scope.dart';
 import '../../state/app_state.dart';
 import '../../widgets/widgets.dart';
+import '../routine/reminder_tile.dart';
 
 /// Home / dashboard: device status, Quick Assistance, a short summary,
 /// the next reminder and the most recent episodes.
@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
     final week = app.rangeFor(PeriodOption.last7Days)!;
     final weekEpisodes = app.episodesIn(week);
     final stats = EpisodeStats.from(weekEpisodes, days: week.days);
-    final reminders = app.upcomingReminders;
+    final nextReminder = app.nextReminder;
     final recent = app.episodes.take(3).toList();
 
     return SafeArea(
@@ -144,7 +144,7 @@ class HomeScreen extends StatelessWidget {
 
           // Reminder
           const SectionHeader(title: 'Next reminder'),
-          if (reminders.isEmpty)
+          if (nextReminder == null)
             AppCard(
               onTap: () => app.goToTab(2),
               padding: const EdgeInsets.all(16),
@@ -165,19 +165,32 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      'No upcoming reminders. Add reminders for anything '
-                      'you need in Routine.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.muted,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'No upcoming reminders',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Add or turn on reminders in Reminders.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             )
           else
-            ReminderCard(reminder: reminders.first, now: now),
+            ReminderTile(
+              key: ValueKey(nextReminder.id),
+              reminder: nextReminder,
+              showLocation: true,
+            ),
 
           // Recent episodes
           SectionHeader(
@@ -203,94 +216,6 @@ class HomeScreen extends StatelessWidget {
                     Navigator.of(context)
                         .pushNamed(Routes.episodeDetail, arguments: episode.id),
               ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A reminder occurrence with its schedule and a Dismiss button.
-class ReminderCard extends StatelessWidget {
-  const ReminderCard({
-    super.key,
-    required this.reminder,
-    required this.now,
-    this.onTap,
-  });
-
-  final UpcomingReminder reminder;
-  final DateTime now;
-
-  /// Opens the reminder, for example to edit it.
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final app = AppScope.read(context);
-    final theme = Theme.of(context);
-    return AppCard(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 48,
-                width: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.skyTint,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  reminder.isMedication
-                      ? Icons.medication_outlined
-                      : Icons.event_outlined,
-                  color: AppColors.navy,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(reminder.title, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 2),
-                    Text(
-                      reminder.schedule ??
-                          '${Fmt.relativeDay(reminder.when, now)} · '
-                              '${Fmt.time(reminder.when)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.navy,
-                      ),
-                    ),
-                    if (reminder.detail.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        reminder.detail,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.muted,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => app.dismissReminder(reminder.key),
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('Dismiss'),
-            ),
-          ),
         ],
       ),
     );
