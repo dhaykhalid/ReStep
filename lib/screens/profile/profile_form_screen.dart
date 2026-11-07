@@ -175,10 +175,11 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 label: 'Email',
                 controller: _emailController,
                 readOnly: true,
+                locked: true,
                 prefixIcon: Icons.mail_outline_rounded,
                 suffixIcon: const Icon(
                   Icons.lock_outline_rounded,
-                  color: AppColors.muted,
+                  color: AppTextField.lockedIcon,
                 ),
               ),
               const SizedBox(height: 6),

@@ -31,6 +31,7 @@ class AppTextField extends StatefulWidget {
     this.inputFormatters,
     this.autofillHints,
     this.revalidateOn,
+    this.locked = false,
   });
 
   final String label;
@@ -55,6 +56,16 @@ class AppTextField extends StatefulWidget {
   /// "confirm password" field must match). Once the field has been checked,
   /// it is re-checked whenever this notifies.
   final Listenable? revalidateOn;
+
+  /// Greys the field out so it reads as not editable (use with [readOnly]).
+  final bool locked;
+
+  static const Color _lockedFill = Color(0xFFF0F2F5);
+  static const Color _lockedBorder = Color(0xFFD9DEE5);
+  static const Color _lockedText = Color(0xFF475467);
+
+  /// Icon colour for a locked field (also used for its lock icon).
+  static const Color lockedIcon = Color(0xFF667085);
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -123,6 +134,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final locked = widget.locked;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -151,20 +163,27 @@ class _AppTextFieldState extends State<AppTextField> {
           textCapitalization: widget.textCapitalization,
           inputFormatters: widget.inputFormatters,
           autofillHints: widget.autofillHints,
-          style: theme.textTheme.bodyLarge,
+          style: locked
+              ? theme.textTheme.bodyLarge
+                  ?.copyWith(color: AppTextField._lockedText)
+              : theme.textTheme.bodyLarge,
           cursorColor: AppColors.navy,
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: const TextStyle(color: AppColors.muted, fontSize: 16),
             filled: true,
-            fillColor: AppColors.fieldFill,
+            fillColor:
+                locked ? AppTextField._lockedFill : AppColors.fieldFill,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 18,
             ),
             prefixIcon: widget.prefixIcon == null
                 ? null
-                : Icon(widget.prefixIcon, color: AppColors.navy),
+                : Icon(
+                    widget.prefixIcon,
+                    color: locked ? AppTextField.lockedIcon : AppColors.navy,
+                  ),
             suffixIcon: widget.isPassword
                 ? IconButton(
                     tooltip: _obscure ? 'Show password' : 'Hide password',
@@ -178,9 +197,14 @@ class _AppTextFieldState extends State<AppTextField> {
                     onPressed: () => setState(() => _obscure = !_obscure),
                   )
                 : widget.suffixIcon,
-            border: _border(AppColors.border),
-            enabledBorder: _border(AppColors.border),
-            focusedBorder: _border(AppColors.navy, 2),
+            border: _border(
+                locked ? AppTextField._lockedBorder : AppColors.border),
+            enabledBorder: _border(
+                locked ? AppTextField._lockedBorder : AppColors.border),
+            // A locked field keeps its quiet border even when tapped.
+            focusedBorder: locked
+                ? _border(AppTextField._lockedBorder)
+                : _border(AppColors.navy, 2),
             errorBorder: _border(AppColors.danger),
             focusedErrorBorder: _border(AppColors.danger, 2),
             errorMaxLines: 3,
