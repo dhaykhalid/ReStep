@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/cue_settings.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
@@ -109,7 +110,7 @@ class _CueSettingsScreenState extends State<CueSettingsScreen> {
         const SectionHeader(title: 'Cue length', topPadding: 16),
         SegmentedChoice<int>(
           values: AppConstants.cueDurationOptions,
-          labelOf: (v) => '$v s',
+          labelOf: (v) => Fmt.secs(v),
           selected: _settings.durationSeconds,
           onChanged: (v) => setState(
             () => _settings = _settings.copyWith(durationSeconds: v),

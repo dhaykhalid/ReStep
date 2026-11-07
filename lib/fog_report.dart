@@ -7,6 +7,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'core/utils/formatters.dart';
 import 'models/episode_stats.dart';
 import 'models/fog_episode.dart';
 import 'services/report_service.dart';
@@ -133,7 +134,7 @@ Future<void> shareFogReportFromRows({
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(_dayTitle(d), style: ts(11, color: _navy, bold: true)),
-          pw.Text('${items.length} ${items.length == 1 ? 'episode' : 'episodes'}  |  avg ${avgDay.toStringAsFixed(1)} s', style: ts(8.5, color: _mute)),
+          pw.Text('${items.length} ${items.length == 1 ? 'episode' : 'episodes'}  |  avg ${Fmt.secsOneDecimal(avgDay)}', style: ts(8.5, color: _mute)),
         ],
       ),
     );
@@ -158,7 +159,7 @@ Future<void> shareFogReportFromRows({
         for (final e in items)
           pw.TableRow(children: [
             cell(_t(e.start), bold: true),
-            cell('${e.durationSeconds.toStringAsFixed(1)} s'),
+            cell(Fmt.secsOneDecimal(e.durationSeconds)),
             cell(e.cue.isEmpty ? '-' : e.cue),
             cell(e.recording, bold: e.recording == 'Manual'),
             cell(_context(e)),
@@ -227,9 +228,9 @@ Future<void> shareFogReportFromRows({
           pw.SizedBox(width: 8),
           kpi('${perDay.toStringAsFixed(1)}/week', 'Frequency'),
           pw.SizedBox(width: 8),
-          kpi('${avg.toStringAsFixed(1)} s', 'Average duration'),
+          kpi(Fmt.secsOneDecimal(avg), 'Average duration'),
           pw.SizedBox(width: 8),
-          kpi('${longest.toStringAsFixed(1)} s', 'Longest episode'),
+          kpi(Fmt.secsOneDecimal(longest), 'Longest episode'),
         ]),
 
         section('Day by day'),

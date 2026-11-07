@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/utils/formatters.dart';
+
 /// ReStep delivers vibration and auditory cues only (visual cueing is out of scope).
 enum CueType { vibration, auditory }
 
@@ -55,7 +57,7 @@ class CueSettings {
   final int durationSeconds;
 
   String get summary => '${type.label} · ${pattern.label.toLowerCase()} · '
-      '$durationSeconds s';
+      '${Fmt.secs(durationSeconds)}';
 
   CueSettings copyWith({
     CueType? type,

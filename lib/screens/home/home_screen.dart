@@ -428,7 +428,7 @@ class _QuickAssistanceCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Cue: ${cue.type.label} · ${cue.durationSeconds} s',
+                  'Cue: ${cue.type.label} · ${Fmt.secs(cue.durationSeconds)}',
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.skySoft,

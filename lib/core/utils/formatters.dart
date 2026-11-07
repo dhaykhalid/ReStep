@@ -98,17 +98,24 @@ class Fmt {
     return '$hour:${two(minute)} $suffix';
   }
 
-  /// "9 s", "1 min 5 s", "2 min".
+  /// "9s", "1 min 5s", "2 min".
   static String duration(Duration d) {
     final total = d.inSeconds;
-    if (total < 60) return '$total s';
+    if (total < 60) return secs(total);
     final minutes = total ~/ 60;
     final seconds = total % 60;
     if (seconds == 0) return '$minutes min';
-    return '$minutes min $seconds s';
+    return '$minutes min ${secs(seconds)}';
   }
 
+  /// Like [duration]: "10s", "1 min".
   static String seconds(int s) => duration(Duration(seconds: s));
+
+  /// A plain number of seconds, never turned into minutes: "5s", "120s".
+  static String secs(int s) => '${s}s';
+
+  /// Seconds to one decimal place: "10.3s".
+  static String secsOneDecimal(double s) => '${s.toStringAsFixed(1)}s';
 
   static String oneDecimal(double v) => v.toStringAsFixed(1);
 }

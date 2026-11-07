@@ -71,7 +71,7 @@ void main() {
   group('Log an episode', () {
     Future<void> openLog(WidgetTester tester, AppState app) async {
       await _open(tester, app, const ManualLogScreen());
-      await _tap(tester, '10 s');
+      await _tap(tester, '10s');
     }
 
     testWidgets('no text box until Other; saves with no context',

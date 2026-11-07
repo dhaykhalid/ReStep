@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
 import '../../models/cue_settings.dart';
 import '../../models/routine.dart';
@@ -145,7 +146,7 @@ class ProfileScreen extends StatelessWidget {
             SettingsTile(
               icon: Icons.vibration,
               title: 'Cue settings',
-              subtitle: '${cue.type.label} · ${cue.durationSeconds} s',
+              subtitle: '${cue.type.label} · ${Fmt.secs(cue.durationSeconds)}',
               onTap: () => Navigator.of(context).pushNamed(Routes.cueSettings),
             ),
           ],
@@ -176,7 +177,7 @@ class ProfileScreen extends StatelessWidget {
             SettingsTile(
               icon: Icons.timer_outlined,
               title: 'Escalation time',
-              subtitle: 'Wait ${app.escalation.waitSeconds} s before alerting',
+              subtitle: 'Wait ${Fmt.secs(app.escalation.waitSeconds)} before alerting',
               onTap: () =>
                   Navigator.of(context).pushNamed(Routes.escalationSettings),
             ),
