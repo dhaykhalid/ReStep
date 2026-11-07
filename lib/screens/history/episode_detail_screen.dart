@@ -98,16 +98,16 @@ class EpisodeDetailScreen extends StatelessWidget {
                       ?.copyWith(color: AppColors.muted),
                 )
               else ...[
-                if (ctx.activities.isNotEmpty)
+                if (ctx.situations.isNotEmpty)
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      for (final a in ctx.activities) StatusChip(label: a),
+                      for (final a in ctx.situations) StatusChip(label: a),
                     ],
                   ),
                 if ((ctx.note ?? '').trim().isNotEmpty) ...[
-                  if (ctx.activities.isNotEmpty) const SizedBox(height: 12),
+                  if (ctx.situations.isNotEmpty) const SizedBox(height: 12),
                   Text(ctx.note!, style: theme.textTheme.bodyLarge),
                 ],
               ],

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
-import '../../models/fog_episode.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
+import 'context_selector.dart';
 
-/// Optional Patient-Reported Context check-in after an episode.
+/// Optional Patient-Reported Context check-in after an episode, also used
+/// to edit an episode's context later.
 /// Ready-made options mean the patient can tap instead of typing.
 class ContextCheckInScreen extends StatefulWidget {
   const ContextCheckInScreen({super.key, required this.episodeId});
@@ -19,38 +19,28 @@ class ContextCheckInScreen extends StatefulWidget {
 }
 
 class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
-  final Set<String> _selected = {};
-  final _noteController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  late final ContextSelectionController _selection;
 
   @override
   void initState() {
     super.initState();
     final episode = AppScope.read(context).episodeById(widget.episodeId);
-    final existing = episode?.context;
-    if (existing != null) {
-      _selected.addAll(existing.activities);
-      _noteController.text = existing.note ?? '';
-    }
+    _selection = ContextSelectionController(episode?.context);
   }
 
   @override
   void dispose() {
-    _noteController.dispose();
+    _selection.dispose();
     super.dispose();
   }
 
   void _save() {
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
     final app = AppScope.read(context);
-    final note = _noteController.text.trim();
-    app.attachContext(
-      widget.episodeId,
-      EpisodeContext(
-        activities: AppConstants.contextOptions
-            .where((o) => _selected.contains(o))
-            .toList(),
-        note: note.isEmpty ? null : note,
-      ),
-    );
+    // Saving with nothing chosen clears the episode's context.
+    app.attachContext(widget.episodeId, _selection.toContext());
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
     messenger.showAppMessage(
@@ -64,11 +54,9 @@ class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
     final app = AppScope.of(context);
     final episode = app.episodeById(widget.episodeId);
     final theme = Theme.of(context);
-    final canSave =
-        _selected.isNotEmpty || _noteController.text.trim().isNotEmpty;
 
     return AppScaffold(
-      title: 'Add context',
+      title: episode?.hasContext ?? false ? 'Edit context' : 'Add context',
       bottom: Row(
         children: [
           Expanded(
@@ -79,10 +67,7 @@ class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: PrimaryButton(
-              label: 'Save',
-              onPressed: canSave ? _save : null,
-            ),
+            child: PrimaryButton(label: 'Save', onPressed: _save),
           ),
         ],
       ),
@@ -118,28 +103,9 @@ class _ContextCheckInScreenState extends State<ContextCheckInScreen> {
           style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.muted),
         ),
         const SizedBox(height: 20),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final option in AppConstants.contextOptions)
-              FilterPill(
-                label: option,
-                selected: _selected.contains(option),
-                onTap: () => setState(() {
-                  if (!_selected.remove(option)) _selected.add(option);
-                }),
-              ),
-          ],
-        ),
-        const SizedBox(height: 28),
-        AppTextField(
-          label: 'Anything else? (optional)',
-          hint: 'Add a short note',
-          controller: _noteController,
-          maxLines: 3,
-          textCapitalization: TextCapitalization.sentences,
-          onChanged: (_) => setState(() {}),
+        Form(
+          key: _formKey,
+          child: ContextSelector(controller: _selection),
         ),
       ],
     );

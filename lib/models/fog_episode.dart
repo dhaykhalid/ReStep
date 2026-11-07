@@ -32,12 +32,32 @@ extension EpisodeSourceX on EpisodeSource {
 
 /// Optional Patient-Reported Context attached to an episode.
 class EpisodeContext {
-  const EpisodeContext({this.activities = const [], this.note});
+  const EpisodeContext({
+    this.activities = const [],
+    this.note,
+    this.otherSituation,
+  });
 
+  /// Chosen from [AppConstants.contextOptions].
   final List<String> activities;
+
+  /// Free-text note from older versions of the app, which no longer ask
+  /// for one. Kept so it is still shown and not lost when editing.
   final String? note;
 
-  bool get isEmpty => activities.isEmpty && (note ?? '').trim().isEmpty;
+  /// What the patient typed after choosing "Other"; null when not chosen.
+  final String? otherSituation;
+
+  bool get hasOther => (otherSituation ?? '').trim().isNotEmpty;
+
+  /// [activities] followed by "Other: ..." when there is a custom situation.
+  List<String> get situations => [
+        ...activities,
+        if (hasOther) 'Other: ${otherSituation!.trim()}',
+      ];
+
+  bool get isEmpty =>
+      activities.isEmpty && !hasOther && (note ?? '').trim().isEmpty;
 }
 
 class FogEpisode {

@@ -266,7 +266,7 @@ Future<void> shareFogReportPdf(ReportResult r) async {
             : e.source == EpisodeSource.quickAssistance
                 ? 'Quick Assistance'
                 : 'Automatic',
-        activities: e.context?.activities ?? const [],
+        activities: e.context?.situations ?? const [],
         note: e.context?.note ?? '',
       ),
   ];

@@ -220,11 +220,11 @@ class _LogRow extends StatelessWidget {
             parts.join(' · '),
             style: const TextStyle(fontSize: 15, color: AppColors.muted),
           ),
-          if (context0 != null && context0.activities.isNotEmpty)
+          if (context0 != null && context0.situations.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
-                'Context: ${context0.activities.join(', ')}',
+                'Context: ${context0.situations.join(', ')}',
                 style: const TextStyle(fontSize: 15, color: AppColors.muted),
               ),
             ),

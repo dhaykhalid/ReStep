@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
-import '../../models/fog_episode.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/widgets.dart';
+import 'context_selector.dart';
 
 /// Manual FoG Logging: add an episode ReStep did not capture.
 class ManualLogScreen extends StatefulWidget {
@@ -22,8 +21,7 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
   final _durationController = TextEditingController();
-  final _noteController = TextEditingController();
-  final Set<String> _selected = {};
+  final _contextSelection = ContextSelectionController();
   late DateTime _date;
   late TimeOfDay _time;
   bool _saving = false;
@@ -51,7 +49,7 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
     _dateController.dispose();
     _timeController.dispose();
     _durationController.dispose();
-    _noteController.dispose();
+    _contextSelection.dispose();
     super.dispose();
   }
 
@@ -106,7 +104,6 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
     if (!_formKey.currentState!.validate()) return;
     final app = AppScope.read(context);
     final seconds = int.parse(_durationController.text.trim());
-    final note = _noteController.text.trim();
     app.addManualEpisode(
       start: DateTime(
         _date.year,
@@ -116,12 +113,7 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
         _time.minute,
       ),
       duration: Duration(seconds: seconds),
-      context: EpisodeContext(
-        activities: AppConstants.contextOptions
-            .where((o) => _selected.contains(o))
-            .toList(),
-        note: note.isEmpty ? null : note,
-      ),
+      context: _contextSelection.toContext(),
     );
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
@@ -210,28 +202,7 @@ class _ManualLogScreenState extends State<ManualLogScreen> {
                 style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final option in AppConstants.contextOptions)
-                    FilterPill(
-                      label: option,
-                      selected: _selected.contains(option),
-                      onTap: () => setState(() {
-                        if (!_selected.remove(option)) _selected.add(option);
-                      }),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              AppTextField(
-                label: 'Note (optional)',
-                hint: 'Add a short note',
-                controller: _noteController,
-                maxLines: 3,
-                textCapitalization: TextCapitalization.sentences,
-              ),
+              ContextSelector(controller: _contextSelection),
             ],
           ),
         ),

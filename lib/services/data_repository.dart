@@ -439,6 +439,9 @@ class FirebaseDataRepository implements DataRepository {
       data['context'] = {
         'activities': episode.context!.activities,
         'note': episode.context!.note,
+        // Left out when Other is not chosen; set() then removes any old value.
+        if (episode.context!.hasOther)
+          'other_situation': episode.context!.otherSituation!.trim(),
       };
     } else {
       data['context'] = null;
@@ -532,10 +535,13 @@ class FirebaseDataRepository implements DataRepository {
               const <String>[];
 
       final note = contextData['note'] as String?;
+      // Missing in episodes saved before "Other" was added.
+      final other = contextData['other_situation'] as String?;
 
       context = EpisodeContext(
         activities: activities,
         note: note,
+        otherSituation: other,
       );
     }
 

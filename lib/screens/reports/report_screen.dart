@@ -266,11 +266,11 @@ class _ReportLogRow extends StatelessWidget {
             parts.join(' \u00B7 '),
             style: const TextStyle(fontSize: 15, color: AppColors.muted),
           ),
-          if (ctx != null && ctx.activities.isNotEmpty)
+          if (ctx != null && ctx.situations.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
-                'Context: ${ctx.activities.join(', ')}',
+                'Context: ${ctx.situations.join(', ')}',
                 style: const TextStyle(fontSize: 15, color: AppColors.muted),
               ),
             ),
